@@ -10,7 +10,7 @@ from examples.PSO_Scheduling.Pso.pso_orchestrator import PSOOrchestrator
 from examples.PSO_Scheduling.setting import *
 from leaf.application import Application, SourceTask, ProcessingTask, SinkTask
 from leaf.infrastructure import Node, Link, Infrastructure
-from leaf.power import PowerModelNode, PowerModelLink, PowerMeter
+from leaf.power import PowerModelNode, PowerModelLink, PowerMeter, PowerModelNodeCarbon
 import util,plot_generator
 
 logging.getLogger('matplotlib.font_manager').disabled = True
@@ -65,10 +65,17 @@ def create_fogs(counts):
         cu = random.uniform(MICROPROCESSORS_CU_POWER_MEAN - MICROPROCESSORS_CU_STD_DEVIATION,
                           MICROPROCESSORS_CU_POWER_MEAN + MICROPROCESSORS_CU_STD_DEVIATION)
 
-        fog_node = Node(type="fog", name=f"fog_{index}", cu=cu,
-                        power_model=PowerModelNode(power_per_cu=power_per_cu, static_power=static_power),
-                        initial_power=MICROPROCESSORS_INITIAL_POWER_MEAN,
-                        remaining_power=MICROPROCESSORS_REMAINING_POWER_MEAN)
+        #we use 10 percent of nodes as carbon free
+        if index < counts*0.1:
+            fog_node = Node(type="carbonfree", name=f"fog_{index}", cu=cu,
+                            power_model=PowerModelNodeCarbon(.25,power_per_cu=power_per_cu, static_power=static_power),
+                            initial_power=MICROPROCESSORS_INITIAL_POWER_MEAN,
+                            remaining_power=MICROPROCESSORS_REMAINING_POWER_MEAN)
+        else :
+            fog_node = Node(type="fog", name=f"fog_{index}", cu=cu,
+                            power_model=PowerModelNode(power_per_cu=power_per_cu, static_power=static_power),
+                            initial_power=MICROPROCESSORS_INITIAL_POWER_MEAN,
+                            remaining_power=MICROPROCESSORS_REMAINING_POWER_MEAN)
         fog_nodes.append(fog_node)
         infrastructure.add_node(fog_node)
 

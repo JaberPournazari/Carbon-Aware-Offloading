@@ -127,6 +127,36 @@ class PowerModelNode(PowerModel):
     def set_parent(self, parent):
         self.node = parent
 
+class PowerModelNodeCarbon(PowerModelNode):
+    def __init__(self, carbon_percent,max_power: float = None, power_per_cu: float = None, static_power: float = 0,
+                 remaining_power: float = 0):
+
+        if carbon_percent > 1 or carbon_percent < 0:
+            raise ValueError("Carbon percent should be between 0 and 1")
+
+        self.carbon_percent=carbon_percent
+
+        super.__init__(max_power=max_power, power_per_cu=power_per_cu, static_power=static_power
+                       , remaining_power=remaining_power)
+
+    def measure(self) -> PowerMeasurement:
+        if self.power_per_cu is not None:
+            dynamic_power = self.power_per_cu * self.node.used_cu
+        elif self.max_power is not None:
+            # print('max_power:', self.max_power)
+            # print('static_power:', self.static_power)
+            # print('node_utilisation:', self.node.utilization())
+            dynamic_power = (self.max_power - self.static_power) * self.node.utilization()
+
+        else:
+            raise RuntimeError("Invalid state of PowerModelNode: `max_power` and `power_per_cu` are undefined.")
+
+        #Finally dynamic_power is reduced based on carbon_percent, because carbon free powers do not use energy
+        dynamic_power= dynamic_power - (dynamic_power * self.carbon_percent)
+        pw = PowerMeasurement(dynamic=dynamic_power, static=self.static_power)
+        return pw
+
+
 class PowerModelLink(PowerModel):
     def __init__(self, energy_per_bit: float):
         """Power model for network links.

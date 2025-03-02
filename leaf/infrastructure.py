@@ -3,7 +3,7 @@ from typing import List, Optional, Type, TypeVar, Iterator, Union, Tuple
 
 import networkx as nx
 
-from leaf.power import PowerAware, PowerMeasurement, PowerModelNode
+from leaf.power import PowerAware, PowerMeasurement, PowerModelNode , PowerModelNodeCarbon
 from leaf.mobility import Location
 
 
@@ -50,6 +50,11 @@ class Node(PowerAware):
             if cu is None and power_model.max_power is not None:
                 raise ValueError("Cannot use PowerModelNode with `max_power` on a compute node with unlimited "
                                  "processing power")
+
+            #Added for carbon_free nodes, If type is carbon_free, then powermodel hardcoded as PowerModelNodeCarbon
+            # if self.type.lower() == "carbonfree":
+            #     self.power_model= PowerModelNodeCarbon
+
             self.power_model = power_model
             self.power_model.set_parent(self)
 
