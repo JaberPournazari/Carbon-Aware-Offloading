@@ -1,15 +1,18 @@
 import logging
-import random
+import random,sys
 import simpy
 import numpy as np
+
+sys.path.append("C:\\Carbon-Aware-Offloading")
 
 from examples.PSO_Scheduling.Csa.csa_proposed_orchestrator import CsaProposedOrchestrator
 from examples.PSO_Scheduling.Csa.csa_orchestrator import CsaOrchestrator
 from examples.PSO_Scheduling.Pso.EETOPSO_orchestrator import EETOPSOOrchestrator
+from examples.PSO_Scheduling.Pso.pso_carbon_orchestrator import PsoCarbonOrchestrator
 from examples.PSO_Scheduling.Pso.pso_orchestrator import PSOOrchestrator
 from examples.PSO_Scheduling.setting import *
 from leaf.application import Application, SourceTask, ProcessingTask, SinkTask
-from leaf.infrastructure import Node, Link, Infrastructure
+from leaf.infrastructure import Node, Link, Infrastructure, NodeCarbon
 from leaf.power import PowerModelNode, PowerModelLink, PowerMeter, PowerModelNodeCarbon
 import util,plot_generator
 
@@ -66,11 +69,13 @@ def create_fogs(counts):
                           MICROPROCESSORS_CU_POWER_MEAN + MICROPROCESSORS_CU_STD_DEVIATION)
 
         #we use 10 percent of nodes as carbon free
-        if index < counts*0.1:
-            fog_node = Node(type="carbonfree", name=f"fog_{index}", cu=cu,
+        if index < counts*0.5:
+            fog_node = NodeCarbon(type="carbonfree", name=f"fog_{index}", cu=cu,
                             power_model=PowerModelNodeCarbon(.25,power_per_cu=power_per_cu, static_power=static_power),
                             initial_power=MICROPROCESSORS_INITIAL_POWER_MEAN,
-                            remaining_power=MICROPROCESSORS_REMAINING_POWER_MEAN)
+                            remaining_power=MICROPROCESSORS_REMAINING_POWER_MEAN,
+                            battery_power=MICROPROCESSORS_BATTERY_POWER
+                            )
         else :
             fog_node = Node(type="fog", name=f"fog_{index}", cu=cu,
                             power_model=PowerModelNode(power_per_cu=power_per_cu, static_power=static_power),
@@ -183,18 +188,23 @@ def main():
 
     orchestrator_list=[]
     #
-    orchestrator_list.append(EETOPSOOrchestrator(infrastructure, applications, devices, tasks, alpha=.34, beta=.33, gamma=.33,
-                                                 delta=0))
-
-    orchestrator_list.append(CsaProposedOrchestrator(infrastructure, applications, devices, tasks, alpha=.34, beta=.33, gamma=.33,
-                        delta=0))
+    # orchestrator_list.append(EETOPSOOrchestrator(infrastructure, applications, devices, tasks, alpha=.34, beta=.33, gamma=.33,
+    #                                              delta=0))
+    #
+    # orchestrator_list.append(CsaProposedOrchestrator(infrastructure, applications, devices, tasks, alpha=.34, beta=.33, gamma=.33,
+    #                     delta=0))
+    #
+    # orchestrator_list.append(
+    #     PSOOrchestrator(infrastructure, applications, devices, tasks, alpha=.34, beta=.33, gamma=.33,
+    #                     delta=0))
+    #
+    # orchestrator_list.append(CsaOrchestrator(infrastructure, applications, devices, tasks, alpha=.34, beta=.33, gamma=.33,
+    #                                delta=0))
 
     orchestrator_list.append(
-        PSOOrchestrator(infrastructure, applications, devices, tasks, alpha=.34, beta=.33, gamma=.33,
+        PsoCarbonOrchestrator(infrastructure, applications, devices, tasks, alpha=.34, beta=.33, gamma=.33,
                         delta=0))
 
-    orchestrator_list.append(CsaOrchestrator(infrastructure, applications, devices, tasks, alpha=.34, beta=.33, gamma=.33,
-                                   delta=0))
 
 
     # TODO: We ignore one application argument. Just pass it to the method and working with global variable applications.
@@ -208,6 +218,16 @@ def main():
         orchestrator.place(applications[0])
         #orchestrator_class_name_ls.append(orchestrator.__class__.__name__)
         orchestrator_class_name_ls.append(orchestrator.legend)
+
+    #################### emissions plot ####################
+    total_node_energy_file_names = []
+    for orchestrator_name in orchestrator_class_name_ls:
+        total_node_energy_file_names.append(f'ResultsCsv/{orchestrator_name}-node-emissions-total')
+    #
+    # we all algorithms are running plot can be done # ,'Total Energy Comparison'
+    plot_generator.plot_total(
+        total_node_energy_file_names, orchestrator_class_name_ls, 'Number of Nodes', 'Total Emission(Kg)',
+        'Total CO2 Generation')
 
     #################### per node ####################
     #
@@ -381,7 +401,7 @@ def generate_tasks_from_applications():
 def generate_devices_from_infrastructure():
     for node in infrastructure.nodes():
         print(node.type)
-        if node.type == 'fog':
+        if node.type in ['fog','carbonfree']:
             devices_available_cu.append(node.cu)
             devices.append(node)
 

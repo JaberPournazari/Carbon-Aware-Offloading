@@ -9,7 +9,33 @@ from examples.PSO_Scheduling.setting import *
 from examples.PSO_Scheduling.Pso.PSO import *
 
 
-class CarbonScheduler(TaskDeviceScheduler):
+class TaskDeviceScheduler:
+
+    def __init__(self, devices, tasks, infrastructure, applications, num_particles=30, max_iter=100, c1=1.5, c2=1.5,
+                 w=0.9, w_damp=0.99):
+        self.devices = devices
+        self.tasks = tasks
+        self.infrastructure=infrastructure
+        self.applications=applications
+        self.num_tasks = len(tasks)
+        self.num_devices = len(devices)
+
+        self.list_fitness = []
+
+        self.num_particles = num_particles
+        self.max_iter = max_iter
+        self.c1 = c1  # Cognitive (particle) weight
+        self.c2 = c2  # Social (swarm) weight
+        self.w = w  # Inertia weightx
+        self.w_damp = w_damp  # Inertia damping after each iteration
+        self.particles_position = np.random.randint(0, self.num_devices, size=(self.num_particles, self.num_tasks))
+        self.particles_velocity = np.zeros_like(self.particles_position, dtype=float)
+        self.particles_best_position = np.copy(self.particles_position)
+        self.particles_best_score = np.array([self.fitness(pos) for pos in self.particles_best_position])
+        self.global_best_position = self.particles_best_position[np.argmin(self.particles_best_score)]
+        self.global_best_score = np.min(self.particles_best_score)
+        self.best_min_iteration_number = self.max_iter
+
     def fitness(self, positions):
         # print(positions)
         positions_set=set(positions)
@@ -21,6 +47,34 @@ class CarbonScheduler(TaskDeviceScheduler):
         static=0
         sum_emission=0
         node_times = [0 for pos in set(self.devices)]
+
+        #added for test
+        #positions=[1,2,1,3]
+        tmp = np.zeros(len(positions),dtype=int)
+        battery_capacity = {k:v for k,v in enumerate(tmp)}
+
+        for j in range(len(self.devices)):
+            if isinstance(self.devices[j],NodeCarbon):
+                battery_capacity[j]=self.devices[j].battery_power
+
+
+        for k in range(len(positions)):
+            if not isinstance(self.devices[positions[k]],NodeCarbon):
+                continue
+            elif isinstance(self.devices[positions[k]],NodeCarbon):
+                if self.tasks[k].cu <= battery_capacity[k]:
+                    battery_capacity[k]=battery_capacity[k]- self.tasks[k].cu
+
+
+        #This final result shows an array with length equal to length of positions array.
+        #Each cell has value of 1 or 0.
+        # 1: It used node batteries
+        # 0: It did not use node batteries or node do not have battery or battery is occupied by another task
+        # we use this array at the end of scheduling to calculate CO2 generation.
+        final_schedule_carbon_used= [1 if v >=1 else 0 for k,v in battery_capacity.items()]
+
+
+
 
         for pos in positions:
             self.tasks[i].allocate(self.devices[pos])
@@ -38,7 +92,8 @@ class CarbonScheduler(TaskDeviceScheduler):
                 sum_node=sum_node+tmp.static
                 positions_set.remove(pos)
 
-            sum_emission= sum_node * self.devices[pos].emission_rate
+            if final_schedule_carbon_used[i] == 0:
+                sum_emission = sum_emission + tmp.dynamic
 
             # calculating energy of links. here we do not consider energy linkes.
             # we will do it later

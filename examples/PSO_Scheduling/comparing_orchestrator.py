@@ -28,6 +28,7 @@ class comparing_orchestrator(Orchestrator):
         application_powers = []
         links_ls = []
         node_times = [0 for pos in set(self.devices)]
+        sum_emissions=0
         i = 0
         for pos in positions:
             # try:
@@ -40,6 +41,7 @@ class comparing_orchestrator(Orchestrator):
 
             energy = self.infrastructure.node(self.devices[pos].name).measure_power()
             positions_ls.append((pos, energy))
+
 
             # placing applications
             app = self.applications[i]
@@ -91,8 +93,15 @@ class comparing_orchestrator(Orchestrator):
             sum_dynamic = 0
             for sel in selected:
                 sum_dynamic = sum_dynamic + sel[1].dynamic
-            # if node iretated 3 times , just  static power sum 1 times
+            # if node iterated 3 times , just  static power sum 1 times
             node_energies.append(PowerMeasurement(sum_dynamic, selected[0][1].static))
+
+            sum_emissions = sum_emissions + (sum_dynamic + selected[0][1].static) * self.devices[j].emission_rate
+
+
+        write_total(sum_emissions, f'{orchestrator_legend}-node-emissions', devices_len)
+
+
 
         # write results in separate files with static and dynamic values
         write_to_csv(node_energies, f'{orchestrator_legend}-node-energy')
@@ -130,6 +139,9 @@ class comparing_orchestrator(Orchestrator):
         static_power = [p.static for p in node_energies]
         total_power = sum(dynamic_power) + sum(static_power)
         write_total(total_power+sum_ram + sum_link ,f'{orchestrator_legend}-node-energy', devices_len)
+
+
+
 
         # based on number of applications
         # old one just write node energies without sum_ram and sum_link

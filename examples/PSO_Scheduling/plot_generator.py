@@ -188,48 +188,40 @@ def plot_total(csv_files, legends, xlabel, ylabel, title):
         nodes_list.append(np.asarray(data, float)[:, 0])
         energy_list.append(np.asarray(data, float)[:, 1])
 
-    # Data for the first, second, third, and fourth files
-    nodes1 = nodes_list[0]
-    energy1 = energy_list[0]
-
-    nodes2 = nodes_list[1]
-    energy2 = energy_list[1]
-
-    nodes3 = nodes_list[2]
-    energy3 = energy_list[2]
-
-    nodes4 = nodes_list[3]  # Fourth dataset
-    energy4 = energy_list[3]  # Fourth energy list
-
     # Ensure all files have the same nodes
-    assert len(nodes1) == len(nodes2) == len(nodes3) == len(nodes4), "The nodes in all files do not match."
+    num_files = len(csv_files)
+    if num_files > 0:
+        first_nodes = nodes_list[0]
+        for nodes in nodes_list:
+            assert len(nodes) == len(first_nodes), "The nodes in all files do not match."
 
-    # Define the bar width and positions
-    bar_width = 0.2  # Adjusted for four bars
-    r1 = np.arange(len(nodes1))
-    r2 = [x + bar_width for x in r1]
-    r3 = [x + bar_width for x in r2]
-    r4 = [x + bar_width for x in r3]  # Fourth dataset positions
+        # Define the bar width and positions
+        bar_width = 0.8 / num_files  # Adjust bar width based on the number of files
+        positions = [np.arange(len(first_nodes))]
 
-    # Create the bar plot
-    plt.figure(figsize=(12, 6))
-    plt.bar(r1, energy1, width=bar_width, edgecolor='grey', label=legends[0])
-    plt.bar(r2, energy2, width=bar_width, edgecolor='grey', label=legends[1])
-    plt.bar(r3, energy3, width=bar_width, edgecolor='grey', label=legends[2])
-    plt.bar(r4, energy4, width=bar_width, edgecolor='grey', label=legends[3])  # Fourth dataset
+        for i in range(1, num_files):
+            positions.append([x + bar_width for x in positions[i - 1]])
 
-    # Add title and labels
-    plt.title(title)
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
-    plt.xticks([r + 1.5 * bar_width for r in r1], nodes1)
+        # Create the bar plot
+        plt.figure(figsize=(12, 6))
 
-    # Add legend
-    plt.legend()
+        for i in range(num_files):
+            plt.bar(positions[i], energy_list[i], width=bar_width, edgecolor='grey', label=legends[i])
 
-    # Show the plot
-    plt.grid(True)
-    plt.show()
+        # Add title and labels
+        plt.title(title)
+        plt.xlabel(xlabel)
+        plt.ylabel(ylabel)
+        plt.xticks([r + (num_files / 2 - 0.5) * bar_width for r in positions[0]], first_nodes)
+
+        # Add legend
+        plt.legend()
+
+        # Show the plot
+        plt.grid(True)
+        plt.show()
+    else:
+        print("No csv files provided.")
 
 
 def plot_task_distribution(array1, array2, array3,array4):
