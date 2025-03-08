@@ -1,16 +1,13 @@
+import networkx as nx
 import numpy as np
-import csv
-import random
+
+import examples.PSO_Scheduling.Pso.PSO
 import leaf.application
 import leaf.infrastructure
-from leaf.infrastructure import *
-import sys
 from examples.PSO_Scheduling.setting import *
-from examples.PSO_Scheduling.Pso.PSO import *
+from examples.PSO_Scheduling.util import calculate_schedule_carbon
 
-
-class TaskDeviceScheduler:
-
+class TaskDeviceScheduler(examples.PSO_Scheduling.Pso.PSO.TaskDeviceScheduler):
     def __init__(self, devices, tasks, infrastructure, applications, num_particles=30, max_iter=100, c1=1.5, c2=1.5,
                  w=0.9, w_damp=0.99):
         self.devices = devices
@@ -49,31 +46,12 @@ class TaskDeviceScheduler:
         node_times = [0 for pos in set(self.devices)]
 
         #added for test
-        #positions=[1,2,1,3]
-        tmp = np.zeros(len(positions),dtype=int)
-        battery_capacity = {k:v for k,v in enumerate(tmp)}
-
-        for j in range(len(self.devices)):
-            if isinstance(self.devices[j],NodeCarbon):
-                battery_capacity[j]=self.devices[j].battery_power
-
-
-        for k in range(len(positions)):
-            if not isinstance(self.devices[positions[k]],NodeCarbon):
-                continue
-            elif isinstance(self.devices[positions[k]],NodeCarbon):
-                if self.tasks[k].cu <= battery_capacity[k]:
-                    battery_capacity[k]=battery_capacity[k]- self.tasks[k].cu
-
-
-        #This final result shows an array with length equal to length of positions array.
-        #Each cell has value of 1 or 0.
-        # 1: It used node batteries
-        # 0: It did not use node batteries or node do not have battery or battery is occupied by another task
-        # we use this array at the end of scheduling to calculate CO2 generation.
-        final_schedule_carbon_used= [1 if v >=1 else 0 for k,v in battery_capacity.items()]
-
-
+        #positions=[1,2,1,3,4,2,3,1,2]
+        #each task 5j used.  each node has 4j renew energy, carbon per gram = 0.4
+        #energy_node=[15,15,10,5]
+        #energy_oil=[11,11,6,1]
+        #sum_carbon=4.4 + 4.4 + 2.4 + 0.4
+        final_schedule_carbon_used = calculate_schedule_carbon(positions, self.devices, self.tasks)
 
 
         for pos in positions:
@@ -138,3 +116,6 @@ class TaskDeviceScheduler:
 
         # TODO: Do not final sum for fitness
         return sum_total
+
+    def optimiz(self):
+        super().optimize()

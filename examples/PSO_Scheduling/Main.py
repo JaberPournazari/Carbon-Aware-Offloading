@@ -68,7 +68,7 @@ def create_fogs(counts):
         cu = random.uniform(MICROPROCESSORS_CU_POWER_MEAN - MICROPROCESSORS_CU_STD_DEVIATION,
                           MICROPROCESSORS_CU_POWER_MEAN + MICROPROCESSORS_CU_STD_DEVIATION)
 
-        #we use 10 percent of nodes as carbon free
+        #we use percent of nodes as carbon free
         if index < counts*0.5:
             fog_node = NodeCarbon(type="carbonfree", name=f"fog_{index}", cu=cu,
                             power_model=PowerModelNodeCarbon(.25,power_per_cu=power_per_cu, static_power=static_power),
@@ -188,18 +188,18 @@ def main():
 
     orchestrator_list=[]
     #
-    # orchestrator_list.append(EETOPSOOrchestrator(infrastructure, applications, devices, tasks, alpha=.34, beta=.33, gamma=.33,
-    #                                              delta=0))
-    #
-    # orchestrator_list.append(CsaProposedOrchestrator(infrastructure, applications, devices, tasks, alpha=.34, beta=.33, gamma=.33,
-    #                     delta=0))
-    #
-    # orchestrator_list.append(
-    #     PSOOrchestrator(infrastructure, applications, devices, tasks, alpha=.34, beta=.33, gamma=.33,
-    #                     delta=0))
-    #
-    # orchestrator_list.append(CsaOrchestrator(infrastructure, applications, devices, tasks, alpha=.34, beta=.33, gamma=.33,
-    #                                delta=0))
+    orchestrator_list.append(EETOPSOOrchestrator(infrastructure, applications, devices, tasks, alpha=.34, beta=.33, gamma=.33,
+                                                 delta=0))
+
+    orchestrator_list.append(CsaProposedOrchestrator(infrastructure, applications, devices, tasks, alpha=.34, beta=.33, gamma=.33,
+                        delta=0))
+
+    orchestrator_list.append(
+        PSOOrchestrator(infrastructure, applications, devices, tasks, alpha=.34, beta=.33, gamma=.33,
+                        delta=0))
+
+    orchestrator_list.append(CsaOrchestrator(infrastructure, applications, devices, tasks, alpha=.34, beta=.33, gamma=.33,
+                                   delta=0))
 
     orchestrator_list.append(
         PsoCarbonOrchestrator(infrastructure, applications, devices, tasks, alpha=.34, beta=.33, gamma=.33,

@@ -28,8 +28,12 @@ class comparing_orchestrator(Orchestrator):
         application_powers = []
         links_ls = []
         node_times = [0 for pos in set(self.devices)]
-        sum_emissions=0
+        sum_emission=0
         i = 0
+
+        final_schedule_carbon_used = calculate_schedule_carbon(positions, self.devices, self.tasks)
+
+
         for pos in positions:
             # try:
             self.tasks[i].allocate(self.devices[pos])
@@ -41,6 +45,10 @@ class comparing_orchestrator(Orchestrator):
 
             energy = self.infrastructure.node(self.devices[pos].name).measure_power()
             positions_ls.append((pos, energy))
+
+
+            if final_schedule_carbon_used[i] == 0:
+                sum_emission = sum_emission + energy.dynamic
 
 
             # placing applications
@@ -96,10 +104,10 @@ class comparing_orchestrator(Orchestrator):
             # if node iterated 3 times , just  static power sum 1 times
             node_energies.append(PowerMeasurement(sum_dynamic, selected[0][1].static))
 
-            sum_emissions = sum_emissions + (sum_dynamic + selected[0][1].static) * self.devices[j].emission_rate
 
 
-        write_total(sum_emissions, f'{orchestrator_legend}-node-emissions', devices_len)
+
+        write_total(sum_emission, f'{orchestrator_legend}-node-emissions', devices_len)
 
 
 

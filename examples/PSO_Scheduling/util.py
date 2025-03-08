@@ -3,6 +3,8 @@ import csv,os
 import numpy as np
 from matplotlib import pyplot as plt
 
+from leaf.infrastructure import NodeCarbon
+
 
 def read_data(datatype):
     with open(datatype.lower() + '.csv', newline='') as f:
@@ -41,5 +43,30 @@ def write_total_power(node_energies,filename,devices_len):
 
 def write_total(sum_time,filename,devices_len):
     write_data(f'ResultsCsv/{filename}-total', [devices_len,sum_time])
+    
+
+def calculate_schedule_carbon(positions,devices,tasks):
+    tmp = np.zeros(len(positions), dtype=int)
+    battery_capacity = {k: v for k, v in enumerate(tmp)}
+
+    for j in range(len(devices)):
+        if isinstance(devices[j], NodeCarbon):
+            battery_capacity[j] = devices[j].battery_power
+
+    for k in range(len(positions)):
+        if not isinstance(devices[positions[k]], NodeCarbon):
+            continue
+        elif isinstance(devices[positions[k]], NodeCarbon):
+            if tasks[k].cu <= battery_capacity[k]:
+                battery_capacity[k] = battery_capacity[k] - tasks[k].cu
+
+    # This final result shows an array with length equal to length of positions array.
+    # Each cell has value of 1 or 0.
+    # 1: It used node batteries
+    # 0: It did not use node batteries or node do not have battery or battery is occupied by another task
+    # we use this array at the end of scheduling to calculate CO2 generation.
+    final_schedule_carbon_used = [1 if v >= 1 else 0 for k, v in battery_capacity.items()]
+
+    return final_schedule_carbon_used
 
 
