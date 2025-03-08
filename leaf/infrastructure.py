@@ -15,7 +15,8 @@ class Node(PowerAware):
                  location: Optional[Location] = None,
                  initial_power: Optional[float] = None,
                  remaining_power: Optional[float] = None,
-                 id: Optional[int] = None):
+                 id: Optional[int] = None,
+                 ):
         """A compute node in the infrastructure graph.
 
         This can represent any kind of node, e.g.
@@ -45,6 +46,11 @@ class Node(PowerAware):
         self.tasks: List["Task"] = []
         if id is not None:
             self.id = id
+
+        # This value is for calculating carbon footprint
+        # footprint = emmision_rate (kg co2 per kWh) * energy
+        # if emission_rate is not None:
+        #     self.emission_rate = emission_rate
 
         if power_model:
             if cu is None and power_model.max_power is not None:
@@ -136,6 +142,82 @@ class Node(PowerAware):
     # def _remaining_power(self,cu:float):
     #     new_remaining_power = self.remaining_power
 
+
+class NodeCarbon(Node,PowerModelNodeCarbon):
+    def __init__(self, type: str,
+                 name: str,
+                 cu: Optional[float] = None,
+                 power_model: Optional["PowerModelNode"] = None,
+                 location: Optional[Location] = None,
+                 initial_power: Optional[float] = None,
+                 remaining_power: Optional[float] = None,
+                 id: Optional[int] = None,
+                 emission_rate: Optional[float] = 0.5,
+                 battery_power= None):
+
+        # NNEEWW
+        self.initial_power = initial_power
+        self.remaining_power = remaining_power
+
+        self.name = name
+        self.type = type
+        if cu is None:
+            self.cu = math.inf
+        else:
+            self.cu = cu
+        self.used_cu = 0
+        self.tasks: List["Task"] = []
+        if id is not None:
+            self.id = id
+
+        # This value is for calculating carbon footprint
+        # footprint = emmision_rate (kg co2 per kWh) * energy
+        # if emission_rate is not None:
+        #     self.emission_rate = emission_rate
+
+        if battery_power is not None:
+            self.battery_power = battery_power
+            self.free_battery= battery_power
+            self.used_battery= 0
+
+        if power_model:
+            if cu is None and power_model.max_power is not None:
+                raise ValueError("Cannot use PowerModelNode with `max_power` on a compute node with unlimited "
+                                 "processing power")
+
+            #Added for carbon_free nodes, If type is carbon_free, then powermodel hardcoded as PowerModelNodeCarbon
+            # if self.type.lower() == "carbonfree":
+            #     self.power_model= PowerModelNodeCarbon
+
+            self.power_model = power_model
+            self.power_model.set_parent(self)
+
+        self.location = location
+
+    def _add_task(self, task: "Task"):
+        """Add a task to the node.
+        Private as this is only called by leaf.application.Task and not part of the public interface.
+        """
+        # added for calculation of CO2 and get energy resource from battery
+        if self._get_free_battery() >= task.cu:
+            self.used_battery = task.cu
+
+        super()._add_task(task)
+
+    def _get_free_battery(self):
+        #self.used_battery=
+        return self.battery_power-self.used_battery
+
+    def _remove_task(self, task: "Task"):
+        """Remove a task from the node.
+
+        Private as this is only called by leaf.application.Task and not part of the public interface.
+        """
+        super()._remove_task(task)
+
+        #added for calculation of CO2
+        if self._get_free_battery()>0:
+            self.used_battery= self.used_battery-task.cu
 
 class Link(PowerAware):
     def __init__(self, src: Node, dst: Node, bandwidth: float, power_model: "PowerModelLink", latency: float = 0,

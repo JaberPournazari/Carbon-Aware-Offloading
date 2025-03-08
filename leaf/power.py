@@ -54,6 +54,7 @@ class PowerMeasurement:
     def total(self) -> float:
         return float(self)
 
+
 class PowerModel(ABC):
     """Abstract base class for power models."""
 
@@ -73,6 +74,8 @@ class PowerModel(ABC):
 
         Should be called in the parent's `__init__()`.
         """
+
+
 class PowerModelNode(PowerModel):
     def __init__(self, max_power: float = None, power_per_cu: float = None, static_power: float = 0,
                  remaining_power: float = 0):
@@ -119,7 +122,7 @@ class PowerModelNode(PowerModel):
         if self.max_power is not None:
             dynamic_power_require = (self.max_power - self.static_power)
         elif self.power_per_cu is not None:
-            dynamic_power_require = self.power_per_cu * self.node.used_cu  #  0.5 * 5 CU =2.5
+            dynamic_power_require = self.power_per_cu * self.node.used_cu  # 0.5 * 5 CU =2.5
         else:
             raise RuntimeError("Invalid state of PowerModelNode: `max_power` and `power_per_cu` are undefined.")
         return dynamic_power_require
@@ -127,17 +130,20 @@ class PowerModelNode(PowerModel):
     def set_parent(self, parent):
         self.node = parent
 
+
 class PowerModelNodeCarbon(PowerModelNode):
-    def __init__(self, carbon_percent,max_power: float = None, power_per_cu: float = None, static_power: float = 0,
+    def __init__(self, carbon_free_percent, max_power: float = None, power_per_cu: float = None, static_power: float = 0,
                  remaining_power: float = 0):
 
-        if carbon_percent > 1 or carbon_percent < 0:
+        if carbon_free_percent > 1 or carbon_free_percent < 0:
             raise ValueError("Carbon percent should be between 0 and 1")
 
-        self.carbon_percent=carbon_percent
 
-        super.__init__(max_power=max_power, power_per_cu=power_per_cu, static_power=static_power
-                       , remaining_power=remaining_power)
+
+        #This is added for calculating energy (totalenergy= energy_consumption * carbon_percent)
+        self.carbon_free_percent = carbon_free_percent
+
+        super().__init__(max_power, power_per_cu, static_power, remaining_power)
 
     def measure(self) -> PowerMeasurement:
         if self.power_per_cu is not None:
@@ -151,8 +157,8 @@ class PowerModelNodeCarbon(PowerModelNode):
         else:
             raise RuntimeError("Invalid state of PowerModelNode: `max_power` and `power_per_cu` are undefined.")
 
-        #Finally dynamic_power is reduced based on carbon_percent, because carbon free powers do not use energy
-        dynamic_power= dynamic_power - (dynamic_power * self.carbon_percent)
+        # Finally dynamic_power is reduced based on carbon_percent, because carbon free powers do not use energy
+        dynamic_power = dynamic_power - (dynamic_power * self.carbon_free_percent)
         pw = PowerMeasurement(dynamic=dynamic_power, static=self.static_power)
         return pw
 
