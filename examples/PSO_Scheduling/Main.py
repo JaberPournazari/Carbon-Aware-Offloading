@@ -10,6 +10,7 @@ from examples.PSO_Scheduling.Csa.csa_orchestrator import CsaOrchestrator
 from examples.PSO_Scheduling.Pso.EETOPSO_orchestrator import EETOPSOOrchestrator
 from examples.PSO_Scheduling.Pso.pso_carbon_orchestrator import PsoCarbonOrchestrator
 from examples.PSO_Scheduling.Pso.pso_orchestrator import PSOOrchestrator
+from examples.PSO_Scheduling.Gwo.GWO_orchestrator import GWOOrchestrator
 from examples.PSO_Scheduling.setting import *
 from leaf.application import Application, SourceTask, ProcessingTask, SinkTask
 from leaf.infrastructure import Node, Link, Infrastructure, NodeCarbon
@@ -188,18 +189,20 @@ def main():
 
     orchestrator_list=[]
     #
-    orchestrator_list.append(EETOPSOOrchestrator(infrastructure, applications, devices, tasks, alpha=.34, beta=.33, gamma=.33,
-                                                 delta=0))
+    # orchestrator_list.append(EETOPSOOrchestrator(infrastructure, applications, devices, tasks, alpha=.34, beta=.33, gamma=.33,
+    #                                              delta=0))
+    #
+    # orchestrator_list.append(CsaProposedOrchestrator(infrastructure, applications, devices, tasks, alpha=.34, beta=.33, gamma=.33,
+    #                     delta=0))
+    #
+    # orchestrator_list.append(PSOOrchestrator(infrastructure, applications, devices, tasks, alpha=.34, beta=.33, gamma=.33,
+    #                     delta=0))
+    #
+    # orchestrator_list.append(CsaOrchestrator(infrastructure, applications, devices, tasks, alpha=.34, beta=.33, gamma=.33,
+    #                                delta=0))
 
-    orchestrator_list.append(CsaProposedOrchestrator(infrastructure, applications, devices, tasks, alpha=.34, beta=.33, gamma=.33,
-                        delta=0))
-
-    orchestrator_list.append(
-        PSOOrchestrator(infrastructure, applications, devices, tasks, alpha=.34, beta=.33, gamma=.33,
-                        delta=0))
-
-    orchestrator_list.append(CsaOrchestrator(infrastructure, applications, devices, tasks, alpha=.34, beta=.33, gamma=.33,
-                                   delta=0))
+    orchestrator_list.append(GWOOrchestrator(infrastructure, applications, devices, tasks, lb=0, ub=len(devices)-1, dim=len(tasks),
+                                             SearchAgents_no=5, Max_iter=100))
 
     orchestrator_list.append(
         PsoCarbonOrchestrator(infrastructure, applications, devices, tasks, alpha=.34, beta=.33, gamma=.33,

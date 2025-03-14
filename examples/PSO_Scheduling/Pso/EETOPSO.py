@@ -9,8 +9,6 @@ import sys
 from examples.PSO_Scheduling.setting import *
 
 class TaskDeviceScheduler:
-    # def __init__(self, devices, tasks,infrastructure,applications,num_particles=30, max_iter=100, c1=1.5, c2=1.5, w=0.9,
-    #              w_damp=0.99):
     def __init__(self, devices, tasks, infrastructure, applications, num_particles=30, max_iter=100, c1=1.5, c2=1.5,
                  w=0.9, w_damp=0.99,alpha=.25,beta=.25,gamma=.25,delta=.25):
         self.devices = devices
