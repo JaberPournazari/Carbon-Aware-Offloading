@@ -55,6 +55,7 @@ class TaskDeviceScheduler:
         self.verbose=verbose
         self.list_fitness=[]
         self.best_min_iteration_number = iterations
+        self.scheduling_dict = {}
 
         global res
         global iterNum
@@ -96,6 +97,7 @@ class TaskDeviceScheduler:
             #  global_best_score in every iteration
             self.global_best_score = best_ind[-1]
             self.list_fitness.append(self.global_best_score)
+            self.scheduling_dict[count]=[self.global_best_position,self.global_best_score]
 
         self.best_min_iteration_number = best_min_iteration_number
         print("best_number_iteration_print = ", best_min_iteration_number)

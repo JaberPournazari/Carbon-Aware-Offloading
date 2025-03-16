@@ -12,6 +12,7 @@ import numpy
 import math
 import leaf.application
 import leaf.infrastructure
+from examples.PSO_Scheduling.util import calculate_schedule_carbon
 from leaf.infrastructure import *
 from examples.PSO_Scheduling.setting import *
 
@@ -35,6 +36,7 @@ class TaskDeviceScheduler:
         self.dim = dim
         self.SearchAgents_no = SearchAgents_no
         self.best_min_iteration_number = Max_iter
+        self.scheduling_dict={}
 
     def optimize(self):
         Max_iter=self.Max_iter
@@ -157,6 +159,8 @@ class TaskDeviceScheduler:
             if l % 1 == 0:
                 print(["At iteration " + str(l) + " the best fitness is " + str(Alpha_score)])
 
+            self.scheduling_dict[l] = [Alpha_pos, Alpha_score]
+
         bestIndividual = Alpha_pos
         self.global_best_position=bestIndividual
         self.global_best_score = Alpha_score
@@ -172,7 +176,10 @@ class TaskDeviceScheduler:
         sum_link=0
         sum_time=0
         static=0
+        sum_emission = 0
         node_times = [0 for pos in set(self.devices)]
+
+        final_schedule_carbon_used = calculate_schedule_carbon(positions, self.devices, self.tasks)
 
         for pos in positions:
             print('pos '+ str(pos))
@@ -190,6 +197,9 @@ class TaskDeviceScheduler:
             if pos in positions_set:
                 sum_node=sum_node+tmp.static
                 positions_set.remove(pos)
+
+            if final_schedule_carbon_used[i] == 0:
+                sum_emission = sum_emission + tmp.dynamic
 
             # calculating energy of links. here we do not consider energy linkes.
             # we will do it later
@@ -221,9 +231,13 @@ class TaskDeviceScheduler:
             self.tasks[i].deallocate()
             i = i + 1
 
+        # each kilo watt has 0.5kg CO2
+        sum_emission = sum_emission * 0.5 / 1000
+
         sum_time = sum(node_times)
         sum_ram = sum_time * MICROPROCESSORS_POWER_RAM
-        sum_total =sum_node + sum_ram + sum_link
+        #sum_total =sum_node + sum_ram + sum_link
+        sum_total = sum_emission
 
 
         # print(positions)

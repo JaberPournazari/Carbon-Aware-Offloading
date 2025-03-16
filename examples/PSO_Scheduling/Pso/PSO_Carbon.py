@@ -32,6 +32,7 @@ class TaskDeviceScheduler(examples.PSO_Scheduling.Pso.PSO.TaskDeviceScheduler):
         self.global_best_position = self.particles_best_position[np.argmin(self.particles_best_score)]
         self.global_best_score = np.min(self.particles_best_score)
         self.best_min_iteration_number = self.max_iter
+        self.scheduling_dict={}
 
     def fitness(self, positions):
         # print(positions)
@@ -103,9 +104,13 @@ class TaskDeviceScheduler(examples.PSO_Scheduling.Pso.PSO.TaskDeviceScheduler):
             self.tasks[i].deallocate()
             i = i + 1
 
+        # each kilo watt has 0.5kg CO2
+        sum_emission = sum_emission * 0.5 / 1000
+
         sum_time = sum(node_times)
         sum_ram = sum_time * MICROPROCESSORS_POWER_RAM
-        sum_total =sum_node + sum_ram + sum_link + sum_emission
+        #sum_total =sum_node + sum_ram + sum_link + sum_emission
+        sum_total = sum_emission
 
 
         # print(positions)
@@ -117,5 +122,5 @@ class TaskDeviceScheduler(examples.PSO_Scheduling.Pso.PSO.TaskDeviceScheduler):
         # TODO: Do not final sum for fitness
         return sum_total
 
-    def optimiz(self):
+    def optimize(self):
         super().optimize()

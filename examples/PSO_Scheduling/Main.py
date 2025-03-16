@@ -5,9 +5,7 @@ import numpy as np
 
 sys.path.append("C:\\Carbon-Aware-Offloading")
 
-from examples.PSO_Scheduling.Csa.csa_proposed_orchestrator import CsaProposedOrchestrator
 from examples.PSO_Scheduling.Csa.csa_orchestrator import CsaOrchestrator
-from examples.PSO_Scheduling.Pso.EETOPSO_orchestrator import EETOPSOOrchestrator
 from examples.PSO_Scheduling.Pso.pso_carbon_orchestrator import PsoCarbonOrchestrator
 from examples.PSO_Scheduling.Pso.pso_orchestrator import PSOOrchestrator
 from examples.PSO_Scheduling.Gwo.GWO_orchestrator import GWOOrchestrator
@@ -184,42 +182,26 @@ def main():
 
     generate_tasks_from_applications()
 
-    # print(f"Available CU: {devices_available_cu}")
-    # print(f"Tasks Available CU: {tasks_require_cu}")
-
     orchestrator_list=[]
-    #
-    # orchestrator_list.append(EETOPSOOrchestrator(infrastructure, applications, devices, tasks, alpha=.34, beta=.33, gamma=.33,
-    #                                              delta=0))
-    #
-    # orchestrator_list.append(CsaProposedOrchestrator(infrastructure, applications, devices, tasks, alpha=.34, beta=.33, gamma=.33,
-    #                     delta=0))
-    #
-    # orchestrator_list.append(PSOOrchestrator(infrastructure, applications, devices, tasks, alpha=.34, beta=.33, gamma=.33,
-    #                     delta=0))
-    #
-    # orchestrator_list.append(CsaOrchestrator(infrastructure, applications, devices, tasks, alpha=.34, beta=.33, gamma=.33,
-    #                                delta=0))
+
+
+    orchestrator_list.append(PSOOrchestrator(infrastructure, applications, devices, tasks, alpha=.34, beta=.33, gamma=.33,
+                        delta=0,max_iter=20))
+
+    orchestrator_list.append(CsaOrchestrator(infrastructure, applications, devices, tasks, alpha=.34, beta=.33, gamma=.33,
+                                   delta=0))
 
     orchestrator_list.append(GWOOrchestrator(infrastructure, applications, devices, tasks, lb=0, ub=len(devices)-1, dim=len(tasks),
-                                             SearchAgents_no=5, Max_iter=100))
+                                             SearchAgents_no=5, Max_iter=20))
 
-    orchestrator_list.append(
-        PsoCarbonOrchestrator(infrastructure, applications, devices, tasks, alpha=.34, beta=.33, gamma=.33,
-                        delta=0))
+    orchestrator_list.append(PsoCarbonOrchestrator(infrastructure, applications, devices, tasks, alpha=.34, beta=.33, gamma=.33,
+                        delta=0,max_iter=20))
 
-
-
-    # TODO: We ignore one application argument. Just pass it to the method and working with global variable applications.
-    # TODO: It should be corrected.
-    # for application in applications:
-    #    orchestrator.place(application)
 
     # Create name for files
     orchestrator_class_name_ls=[]
     for orchestrator in orchestrator_list:
         orchestrator.place(applications[0])
-        #orchestrator_class_name_ls.append(orchestrator.__class__.__name__)
         orchestrator_class_name_ls.append(orchestrator.legend)
 
     #################### emissions plot ####################

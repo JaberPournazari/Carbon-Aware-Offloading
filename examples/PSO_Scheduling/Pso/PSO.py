@@ -35,6 +35,7 @@ class TaskDeviceScheduler:
         self.global_best_position = self.particles_best_position[np.argmin(self.particles_best_score)]
         self.global_best_score = np.min(self.particles_best_score)
         self.best_min_iteration_number = self.max_iter
+        self.scheduling_dict={}
 
     def __check_multi_params__(self,alpha,beta,gamma,delta):
         if alpha+beta+gamma+delta != 1:
@@ -100,7 +101,6 @@ class TaskDeviceScheduler:
         sum_ram = sum_time * MICROPROCESSORS_POWER_RAM
         sum_total =sum_node + sum_ram + sum_link
 
-
         # print(positions)
         # print(sum_total)
         # print('==================')
@@ -113,8 +113,8 @@ class TaskDeviceScheduler:
     def optimize(self):
         print('Starting B-PSO')
         best_min_iteration_number = self.max_iter
-        for k in range(self.max_iter):
-            print(k)
+        for l in range(self.max_iter):
+            print(l)
             for i in range(self.num_particles):
                 # Update velocity and position (using modified PSO rules for permutations)
                 for j in range(self.num_tasks):
@@ -153,9 +153,11 @@ class TaskDeviceScheduler:
 
                 # Update global best
                 if current_fitness < self.global_best_score:
-                    best_min_iteration_number = k
+                    best_min_iteration_number = l
                     self.global_best_score = current_fitness
                     self.global_best_position = self.particles_position[i].copy()
+
+            self.scheduling_dict[l]=[self.global_best_position,self.global_best_score]
 
             # Dampen inertia weight
             self.w *= self.w_damp

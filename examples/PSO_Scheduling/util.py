@@ -43,7 +43,23 @@ def write_total_power(node_energies,filename,devices_len):
 
 def write_total(sum_time,filename,devices_len):
     write_data(f'ResultsCsv/{filename}-total', [devices_len,sum_time])
-    
+
+
+def write_scheduling_data(file_name,scheduling_dict):
+    fullfilename = file_name.lower() + '.csv'
+    dirname = os.path.dirname(fullfilename)
+    if not os.path.exists(dirname):
+        os.makedirs(dirname)
+
+    # open the file in the write mode
+    with open(fullfilename, 'a', newline='') as f:
+        #writer = csv.writer(f)
+        # write a row to the csv file
+        #for k,v in scheduling_dict.items():
+        #     f.write(str(k) +','+ str(v[0]) +','+ str(v[1]))
+        result = ''.join(str(k) +','+ str(v[0]) +','+ str(v[1]) + '\n' for k, v in scheduling_dict.items())
+        f.write(result)
+
 
 def calculate_schedule_carbon(positions,devices,tasks):
     tmp = np.zeros(len(positions), dtype=int)

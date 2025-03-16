@@ -50,7 +50,6 @@ class comparing_orchestrator(Orchestrator):
             if final_schedule_carbon_used[i] == 0:
                 sum_emission = sum_emission + energy.dynamic
 
-
             # placing applications
             app = self.applications[i]
 
@@ -104,17 +103,12 @@ class comparing_orchestrator(Orchestrator):
             # if node iterated 3 times , just  static power sum 1 times
             node_energies.append(PowerMeasurement(sum_dynamic, selected[0][1].static))
 
-
-
-
+        # each kilo watt has 0.5kg CO2
+        sum_emission = sum_emission * 0.5 / 1000
         write_total(sum_emission, f'{orchestrator_legend}-node-emissions', devices_len)
-
-
 
         # write results in separate files with static and dynamic values
         write_to_csv(node_energies, f'{orchestrator_legend}-node-energy')
-
-
 
 
         # This list is for generating plot of how many tasks will be executing on each node
@@ -181,16 +175,9 @@ class comparing_orchestrator(Orchestrator):
         #write best iteration
         write_data(f'ResultsCsv/{orchestrator_legend}-best-iteration', [len(self.applications), self.scheduler.best_min_iteration_number])
 
-        # generate_plot(node_times,'Node spent times','Node','Time(s)')
-        # write_to_csv(node_times, 'Pso-node-times')
+        #write iteration and fitness and scheduling
+        write_scheduling_data(f'ResultsCsv/{orchestrator_legend}-scheduling-map', self.scheduler.scheduling_dict)
 
-        # generate_plot_energy(application_powers,'Application')
-
-        # print('list_fitness', self.scheduler.list_fitness)
-
-        # generate_plot(scheduler.list_fitness)
-        # generate_plot_cu(devices_available_cu)
-        # print("done")
 
     def _calculate_sum_static_dynamic(self, energy):
         if type(energy) == list:
