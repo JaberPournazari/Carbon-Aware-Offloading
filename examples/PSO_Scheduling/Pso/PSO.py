@@ -92,9 +92,9 @@ class TaskDeviceScheduler:
                 #TODO: Do not sum duplicated linkes static power
                 #sum_link=sum_link+tmp.static
 
-                data_flow.deallocate()
+                #data_flow.deallocate()
 
-            self.tasks[i].deallocate()
+            #self.tasks[i].deallocate()
             i = i + 1
 
         sum_time = sum(node_times)
@@ -104,6 +104,13 @@ class TaskDeviceScheduler:
         # print(positions)
         # print(sum_total)
         # print('==================')
+
+        for app in self.applications:
+            for src_task_id, dst_task_id, data_flow in app.graph.edges.data("data"):
+                data_flow.deallocate()
+
+        for tsk in self.tasks:
+            tsk.deallocate()
 
 
 

@@ -76,10 +76,13 @@ class comparing_orchestrator(Orchestrator):
 
             links_ls = [n.measure_power() for n in self.infrastructure.links()]
 
-            for src_task_id, dst_task_id, data_flow in app.graph.edges.data("data"):
-                data_flow.deallocate()
 
-            self.tasks[i].deallocate()
+            #deallocation removed in new version
+            #for src_task_id, dst_task_id, data_flow in app.graph.edges.data("data"):
+                #data_flow.deallocate()
+
+            #deallocation removed in new version
+            #self.tasks[i].deallocate()
             i = i + 1
 
         # sum ram
@@ -176,7 +179,15 @@ class comparing_orchestrator(Orchestrator):
         write_data(f'ResultsCsv/{orchestrator_legend}-best-iteration', [len(self.applications), self.scheduler.best_min_iteration_number])
 
         #write iteration and fitness and scheduling
-        write_scheduling_data(f'ResultsCsv/{orchestrator_legend}-scheduling-map', self.scheduler.scheduling_dict)
+        #write_scheduling_data(f'ResultsCsv/{orchestrator_legend}-scheduling-map', self.scheduler.scheduling_dict)
+
+
+        for app in self.applications:
+            for src_task_id, dst_task_id, data_flow in app.graph.edges.data("data"):
+                data_flow.deallocate()
+
+        for tsk in self.tasks:
+            tsk.deallocate()
 
 
     def _calculate_sum_static_dynamic(self, energy):

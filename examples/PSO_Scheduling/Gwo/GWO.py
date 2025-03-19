@@ -176,10 +176,9 @@ class TaskDeviceScheduler:
         sum_link=0
         sum_time=0
         static=0
-        sum_emission = 0
+
         node_times = [0 for pos in set(self.devices)]
 
-        final_schedule_carbon_used = calculate_schedule_carbon(positions, self.devices, self.tasks)
 
         for pos in positions:
             print('pos '+ str(pos))
@@ -198,8 +197,6 @@ class TaskDeviceScheduler:
                 sum_node=sum_node+tmp.static
                 positions_set.remove(pos)
 
-            if final_schedule_carbon_used[i] == 0:
-                sum_emission = sum_emission + tmp.dynamic
 
             # calculating energy of links. here we do not consider energy linkes.
             # we will do it later
@@ -226,18 +223,14 @@ class TaskDeviceScheduler:
                 #TODO: Do not sum duplicated linkes static power
                 #sum_link=sum_link+tmp.static
 
-                data_flow.deallocate()
+                #data_flow.deallocate()
 
-            self.tasks[i].deallocate()
+            #self.tasks[i].deallocate()
             i = i + 1
-
-        # each kilo watt has 0.5kg CO2
-        sum_emission = sum_emission * 0.5 / 1000
 
         sum_time = sum(node_times)
         sum_ram = sum_time * MICROPROCESSORS_POWER_RAM
-        #sum_total =sum_node + sum_ram + sum_link
-        sum_total = sum_emission
+        sum_total =sum_node + sum_ram + sum_link
 
 
         # print(positions)
@@ -245,6 +238,13 @@ class TaskDeviceScheduler:
         # print('==================')
 
 
+        for app in self.applications:
+            for src_task_id, dst_task_id, data_flow in app.graph.edges.data("data"):
+                data_flow.deallocate()
+
+
+        for tsk in self.tasks:
+            tsk.deallocate()
 
         # TODO: Do not final sum for fitness
         return sum_total

@@ -1,38 +1,17 @@
 import networkx as nx
-import numpy as np
 
-import examples.PSO_Scheduling.Pso.PSO
+import examples.PSO_Scheduling.Gwo.GWO
+from examples.PSO_Scheduling.setting import MICROPROCESSORS_POWER_RAM
+
 import leaf.application
 import leaf.infrastructure
-from examples.PSO_Scheduling.setting import *
 from examples.PSO_Scheduling.util import calculate_schedule_carbon
+from leaf.infrastructure import *
 
-class TaskDeviceScheduler(examples.PSO_Scheduling.Pso.PSO.TaskDeviceScheduler):
-    def __init__(self, devices, tasks, infrastructure, applications, num_particles=30, max_iter=100, c1=1.5, c2=1.5,
-                 w=0.9, w_damp=0.99):
-        self.devices = devices
-        self.tasks = tasks
-        self.infrastructure=infrastructure
-        self.applications=applications
-        self.num_tasks = len(tasks)
-        self.num_devices = len(devices)
+class TaskDeviceScheduler(examples.PSO_Scheduling.Gwo.GWO.TaskDeviceScheduler):
+    def __init__(self, devices, tasks, infrastructure, applications, lb, ub, dim, SearchAgents_no, Max_iter):
 
-        self.list_fitness = []
-
-        self.num_particles = num_particles
-        self.max_iter = max_iter
-        self.c1 = c1  # Cognitive (particle) weight
-        self.c2 = c2  # Social (swarm) weight
-        self.w = w  # Inertia weightx
-        self.w_damp = w_damp  # Inertia damping after each iteration
-        self.particles_position = np.random.randint(0, self.num_devices, size=(self.num_particles, self.num_tasks))
-        self.particles_velocity = np.zeros_like(self.particles_position, dtype=float)
-        self.particles_best_position = np.copy(self.particles_position)
-        self.particles_best_score = np.array([self.fitness(pos) for pos in self.particles_best_position])
-        self.global_best_position = self.particles_best_position[np.argmin(self.particles_best_score)]
-        self.global_best_score = np.min(self.particles_best_score)
-        self.best_min_iteration_number = self.max_iter
-        self.scheduling_dict={}
+        super().__init__(devices, tasks, infrastructure, applications, lb, ub, dim, SearchAgents_no, Max_iter)
 
     def fitness(self, positions):
         # print(positions)
@@ -43,21 +22,15 @@ class TaskDeviceScheduler(examples.PSO_Scheduling.Pso.PSO.TaskDeviceScheduler):
         sum_link=0
         sum_time=0
         static=0
-        sum_emission=0
+        sum_emission = 0
         node_times = [0 for pos in set(self.devices)]
 
-        #added for test
-        #positions=[1,2,1,3,4,2,3,1,2]
-        #each task 5j used.  each node has 4j renew energy, carbon per gram = 0.4
-        #energy_node=[15,15,10,5]
-        #energy_oil=[11,11,6,1]
-        #sum_carbon=4.4 + 4.4 + 2.4 + 0.4
         final_schedule_carbon_used = calculate_schedule_carbon(positions, self.devices, self.tasks)
 
-        print(positions)
-
         for pos in positions:
+            print('pos '+ str(pos))
             self.tasks[i].allocate(self.devices[pos])
+
             # self.tasks[i].node.power_model().power_per_cu=self.tasks[i].cu
 
             # calculating node consumed time
@@ -66,7 +39,6 @@ class TaskDeviceScheduler(examples.PSO_Scheduling.Pso.PSO.TaskDeviceScheduler):
 
             tmp = self.devices[pos].measure_power()
             sum_node = sum_node + tmp.dynamic
-
 
             if pos in positions_set:
                 sum_node=sum_node+tmp.static
@@ -111,7 +83,6 @@ class TaskDeviceScheduler(examples.PSO_Scheduling.Pso.PSO.TaskDeviceScheduler):
         sum_time = sum(node_times)
         sum_ram = sum_time * MICROPROCESSORS_POWER_RAM
         sum_total =sum_node + sum_ram + sum_link + sum_emission
-        #sum_total = sum_emission
 
 
         # print(positions)
@@ -127,9 +98,5 @@ class TaskDeviceScheduler(examples.PSO_Scheduling.Pso.PSO.TaskDeviceScheduler):
         for tsk in self.tasks:
             tsk.deallocate()
 
-
         # TODO: Do not final sum for fitness
         return sum_total
-
-    def optimize(self):
-        super().optimize()

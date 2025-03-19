@@ -1,19 +1,18 @@
 import logging
-import random,sys
+import random, sys
 import simpy
 import numpy as np
 
 sys.path.append("C:\\Carbon-Aware-Offloading")
 
 from examples.PSO_Scheduling.Csa.csa_orchestrator import CsaOrchestrator
-from examples.PSO_Scheduling.Pso.pso_carbon_orchestrator import PsoCarbonOrchestrator
 from examples.PSO_Scheduling.Pso.pso_orchestrator import PSOOrchestrator
 from examples.PSO_Scheduling.Gwo.GWO_orchestrator import GWOOrchestrator
 from examples.PSO_Scheduling.setting import *
 from leaf.application import Application, SourceTask, ProcessingTask, SinkTask
 from leaf.infrastructure import Node, Link, Infrastructure, NodeCarbon
 from leaf.power import PowerModelNode, PowerModelLink, PowerMeter, PowerModelNodeCarbon
-import util,plot_generator
+import util, plot_generator
 
 logging.getLogger('matplotlib.font_manager').disabled = True
 
@@ -35,7 +34,7 @@ devices = []
 tasks = []
 
 devices_available_cu = []
-tasks_require_cu=[]
+tasks_require_cu = []
 
 
 ########################## NEW @@@@@@@@@@@@@@@
@@ -57,25 +56,26 @@ def create_sensors():
 def create_fogs(counts):
     power_per_cu = 0.00035
     for index in range(counts):
-        #max_power = random.gauss(MICROPROCESSORS_MAX_POWER_MEAN, MICROPROCESSORS_MAX_POWER_STD_DEVIATION)
-        max_power = random.uniform(MICROPROCESSORS_MAX_POWER_MEAN-MICROPROCESSORS_MAX_POWER_STD_DEVIATION,
-                                   MICROPROCESSORS_MAX_POWER_MEAN+MICROPROCESSORS_MAX_POWER_STD_DEVIATION)
+        # max_power = random.gauss(MICROPROCESSORS_MAX_POWER_MEAN, MICROPROCESSORS_MAX_POWER_STD_DEVIATION)
+        max_power = random.uniform(MICROPROCESSORS_MAX_POWER_MEAN - MICROPROCESSORS_MAX_POWER_STD_DEVIATION,
+                                   MICROPROCESSORS_MAX_POWER_MEAN + MICROPROCESSORS_MAX_POWER_STD_DEVIATION)
 
-        static_power = random.uniform(MICROPROCESSORS_STATIC_POWER_MEAN-MICROPROCESSORS_STATIC_POWER_STD_DEVIATION,
-                                      MICROPROCESSORS_STATIC_POWER_MEAN+MICROPROCESSORS_STATIC_POWER_STD_DEVIATION)
+        static_power = random.uniform(MICROPROCESSORS_STATIC_POWER_MEAN - MICROPROCESSORS_STATIC_POWER_STD_DEVIATION,
+                                      MICROPROCESSORS_STATIC_POWER_MEAN + MICROPROCESSORS_STATIC_POWER_STD_DEVIATION)
 
         cu = random.uniform(MICROPROCESSORS_CU_POWER_MEAN - MICROPROCESSORS_CU_STD_DEVIATION,
-                          MICROPROCESSORS_CU_POWER_MEAN + MICROPROCESSORS_CU_STD_DEVIATION)
+                            MICROPROCESSORS_CU_POWER_MEAN + MICROPROCESSORS_CU_STD_DEVIATION)
 
-        #we use percent of nodes as carbon free
-        if index < counts*0.5:
+        # we use percent of nodes as carbon free
+        if index < counts * 0.5:
             fog_node = NodeCarbon(type="carbonfree", name=f"fog_{index}", cu=cu,
-                            power_model=PowerModelNodeCarbon(.25,power_per_cu=power_per_cu, static_power=static_power),
-                            initial_power=MICROPROCESSORS_INITIAL_POWER_MEAN,
-                            remaining_power=MICROPROCESSORS_REMAINING_POWER_MEAN,
-                            battery_power=MICROPROCESSORS_BATTERY_POWER
-                            )
-        else :
+                                  power_model=PowerModelNodeCarbon(.25, power_per_cu=power_per_cu,
+                                                                   static_power=static_power),
+                                  initial_power=MICROPROCESSORS_INITIAL_POWER_MEAN,
+                                  remaining_power=MICROPROCESSORS_REMAINING_POWER_MEAN,
+                                  battery_power=MICROPROCESSORS_BATTERY_POWER
+                                  )
+        else:
             fog_node = Node(type="fog", name=f"fog_{index}", cu=cu,
                             power_model=PowerModelNode(power_per_cu=power_per_cu, static_power=static_power),
                             initial_power=MICROPROCESSORS_INITIAL_POWER_MEAN,
@@ -84,6 +84,7 @@ def create_fogs(counts):
         infrastructure.add_node(fog_node)
 
     return fog_nodes
+
 
 links = []
 
@@ -120,7 +121,7 @@ def create_applications(sensor_nodes, cloud_nodes):
         # cu=0.9 * sensor.power_model.max_power
         app1_source_task = SourceTask(cu=0.9 * sensor.power_model.max_power, bound_node=sensor)
 
-        task_size=random.randint(TASK_MEAN-TASK_STD_DEVIATION,TASK_MEAN+TASK_STD_DEVIATION)
+        task_size = random.randint(TASK_MEAN - TASK_STD_DEVIATION, TASK_MEAN + TASK_STD_DEVIATION)
 
         app1_processing_task = ProcessingTask(cu=task_size)
         app1_processing_task.scheduling_id = processing_task_id
@@ -182,24 +183,24 @@ def main():
 
     generate_tasks_from_applications()
 
-    orchestrator_list=[]
+    orchestrator_list = []
 
+    carbon_aware = True
 
-    orchestrator_list.append(PSOOrchestrator(infrastructure, applications, devices, tasks, alpha=.34, beta=.33, gamma=.33,
-                        delta=0,max_iter=20))
+    orchestrator_list.append(
+        PSOOrchestrator(infrastructure, applications, devices, tasks, carbon_aware, alpha=.34, beta=.33, gamma=.33,
+                        delta=0, max_iter=50))
 
-    orchestrator_list.append(CsaOrchestrator(infrastructure, applications, devices, tasks, alpha=.34, beta=.33, gamma=.33,
-                                   delta=0))
+    orchestrator_list.append(
+        CsaOrchestrator(infrastructure, applications, devices, tasks,carbon_aware, alpha=.34, beta=.33, gamma=.33,
+                        delta=0, max_iter=50))
 
-    orchestrator_list.append(GWOOrchestrator(infrastructure, applications, devices, tasks, lb=0, ub=len(devices)-1, dim=len(tasks),
-                                             SearchAgents_no=5, Max_iter=20))
-
-    orchestrator_list.append(PsoCarbonOrchestrator(infrastructure, applications, devices, tasks, alpha=.34, beta=.33, gamma=.33,
-                        delta=0,max_iter=20))
-
+    orchestrator_list.append(
+        GWOOrchestrator(infrastructure, applications, devices, tasks,carbon_aware, lb=0, ub=len(devices) - 1, dim=len(tasks),
+                        SearchAgents_no=5, Max_iter=50))
 
     # Create name for files
-    orchestrator_class_name_ls=[]
+    orchestrator_class_name_ls = []
     for orchestrator in orchestrator_list:
         orchestrator.place(applications[0])
         orchestrator_class_name_ls.append(orchestrator.legend)
@@ -216,26 +217,24 @@ def main():
 
     #################### per node ####################
     #
-    #read file names automatically based on the name of the class (Energy)
-    total_node_energy_file_names=[]
+    # read file names automatically based on the name of the class (Energy)
+    total_node_energy_file_names = []
     for orchestrator_name in orchestrator_class_name_ls:
         total_node_energy_file_names.append(f'ResultsCsv/{orchestrator_name}-node-energy-total')
     #
     # we all algorithms are running plot can be done # ,'Total Energy Comparison'
     plot_generator.plot_total(
-        total_node_energy_file_names,orchestrator_class_name_ls,'Number of Nodes','Total Energy(W)','Total Energy Consumption')
-
+        total_node_energy_file_names, orchestrator_class_name_ls, 'Number of Nodes', 'Total Energy(W)',
+        'Total Energy Consumption')
 
     # read file names automatically based on the name of the class (Time)
     total_node_time_file_names = []
     for orchestrator_name in orchestrator_class_name_ls:
         total_node_time_file_names.append(f'ResultsCsv/{orchestrator_name}-node-time-total')
 
-
     plot_generator.plot_total(
-         total_node_time_file_names, orchestrator_class_name_ls, 'Number of Nodes', 'Time(S)',
-         'Makespan')
-
+        total_node_time_file_names, orchestrator_class_name_ls, 'Number of Nodes', 'Time(S)',
+        'Makespan')
 
     # # read file names automatically based on the name of the class (Ram)
     # total_ram_energy_node_file_names = []
@@ -263,8 +262,8 @@ def main():
         total_application_energy_file_names.append(f'ResultsCsv/{orchestrator_name}-application-energy-total')
 
     plot_generator.plot_total(
-         total_application_energy_file_names, orchestrator_class_name_ls, 'Number of Tasks', 'Energy(w)',
-         'Total energy consumption')
+        total_application_energy_file_names, orchestrator_class_name_ls, 'Number of Tasks', 'Energy(w)',
+        'Total energy consumption')
 
     # read file names automatically based on the name of the class (Link energy of Applications)
     total_link_energy_application_file_names = []
@@ -293,36 +292,31 @@ def main():
         total_time_application_file_names, orchestrator_class_name_ls, 'Number of Tasks', 'Time(s)',
         ' Makespan')
 
-    count_tasks_on_nodes_file_names=[]
+    count_tasks_on_nodes_file_names = []
     for orchestrator_name in orchestrator_class_name_ls:
         count_tasks_on_nodes_file_names.append(f'ResultsCsv/{orchestrator_name}-count-tasks-on-nodes')
 
-
-    arrays=[]
+    arrays = []
     for file in count_tasks_on_nodes_file_names:
-        temp_arr=util.read_data(file)
+        temp_arr = util.read_data(file)
         arrays.append([int(i) for i in temp_arr[0]])
 
-    plot_generator.plot_task_distribution(arrays[0],arrays[1],arrays[2],arrays[3])
+    plot_generator.plot_task_distribution(arrays[0], arrays[1], arrays[2], arrays[3])
 
     min_iter_file_names = []
     for orchestrator_name in orchestrator_class_name_ls:
         min_iter_file_names.append(f'ResultsCsv/{orchestrator_name}-best-iteration')
 
     task_lists = []
-    iteration_lists=[]
+    iteration_lists = []
     for file in min_iter_file_names:
         temp_arr = util.read_data(file)
         task_lists.append([int(i) for i in np.array(temp_arr)[:, 0]])
         iteration_lists.append([int(i) for i in np.array(temp_arr)[:, 1]])
 
-
-    labels=[i.legend for i in orchestrator_list]
-    colors=['tab:blue','tab:orange','tab:green','tab:red']
-    plot_generator.plot_task_min_iterations(task_lists,iteration_lists,labels,colors)
-
-
-
+    labels = [i.legend for i in orchestrator_list]
+    colors = ['tab:blue', 'tab:orange', 'tab:green', 'tab:red']
+    plot_generator.plot_task_min_iterations(task_lists, iteration_lists, labels, colors)
 
     # x= infrastructure.nodes(PowerModelNode._)
     # y=[infrastructure.node("fog1")]
@@ -376,6 +370,7 @@ def main():
     # links_ls = [n.measure_power() for n in infrastructure.links()]
     # generate_plot_energy(links_ls, 'Link')
 
+
 def generate_tasks_from_applications():
     for app in applications:
         for task in app.tasks():
@@ -383,10 +378,11 @@ def generate_tasks_from_applications():
                 tasks_require_cu.append(task.cu)
                 tasks.append(task)
 
+
 def generate_devices_from_infrastructure():
     for node in infrastructure.nodes():
         print(node.type)
-        if node.type in ['fog','carbonfree']:
+        if node.type in ['fog', 'carbonfree']:
             devices_available_cu.append(node.cu)
             devices.append(node)
 

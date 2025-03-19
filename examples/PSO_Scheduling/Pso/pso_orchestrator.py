@@ -1,4 +1,5 @@
 from examples.PSO_Scheduling.Pso.PSO import TaskDeviceScheduler
+from examples.PSO_Scheduling.Pso.PSO_Carbon import TaskDeviceScheduler as carbonTaskDeviceScheduler
 from examples.PSO_Scheduling.comparing_orchestrator import comparing_orchestrator
 
 
@@ -9,7 +10,7 @@ class PSOOrchestrator(comparing_orchestrator):
     or fail because there are not enough resources available ("sensor").
     """
 
-    def  __init__ (self,infrastructure,applications,devices,tasks,alpha=25,beta=25,gamma=25,delta=25,
+    def  __init__ (self,infrastructure,applications,devices,tasks,carbon=False,alpha=25,beta=25,gamma=25,delta=25,
                    num_particles=30, max_iter=100, c1=1.5, c2=1.5,
                  w=0.9, w_damp=0.99):
         self.devices=devices
@@ -26,12 +27,20 @@ class PSOOrchestrator(comparing_orchestrator):
         self.c2=c2
         self.w=w
         self.w_damp=w_damp
-        self.legend='B-PSO'
 
 
-        self.scheduler=TaskDeviceScheduler(self.devices, self.tasks, self.infrastructure, self.applications,
-                                           num_particles=self.num_particles,max_iter=self.max_iter,c1=self.c1,
-                                           c2=self.c2,w= self.w,w_damp=self.w_damp)
+
+        if carbon==True:
+            self.legend = 'Carbon-PSO'
+            self.scheduler = carbonTaskDeviceScheduler(self.devices, self.tasks, self.infrastructure, self.applications,
+                                                 num_particles=self.num_particles, max_iter=self.max_iter, c1=self.c1,
+                                                 c2=self.c2, w=self.w, w_damp=self.w_damp)
+        else:
+            self.legend = 'B-PSO'
+            self.scheduler = TaskDeviceScheduler(self.devices, self.tasks, self.infrastructure, self.applications,
+                                                 num_particles=self.num_particles, max_iter=self.max_iter, c1=self.c1,
+                                                 c2=self.c2, w=self.w, w_damp=self.w_damp)
+
 
         super().__init__(infrastructure, applications, self.scheduler)
 
