@@ -1,9 +1,9 @@
 import networkx as nx
 
-from examples.PSO_Scheduling.setting import MICROPROCESSORS_POWER_RAM
-from examples.PSO_Scheduling.util import *
-from examples.PSO_Scheduling.plot_generator import *
-from leaf.application import ProcessingTask, Application, SourceTask
+from examples.Scheduling.setting import MICROPROCESSORS_POWER_RAM
+from examples.Scheduling.Util.util import *
+from examples.Scheduling.Util.plot_generator import *
+from leaf.application import Application, SourceTask
 from leaf.orchestrator import Orchestrator
 from leaf.power import PowerMeasurement
 

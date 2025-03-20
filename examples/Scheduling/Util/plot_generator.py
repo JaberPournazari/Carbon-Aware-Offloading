@@ -1,6 +1,6 @@
 import numpy as np
 from matplotlib import pyplot as plt
-import util
+from examples.Scheduling.Util import util
 
 
 def generate_plot(list_fitness):

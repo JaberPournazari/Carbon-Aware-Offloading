@@ -5,7 +5,6 @@ from typing import Callable, List
 
 import networkx as nx
 
-from examples.PSO_Scheduling.Pso.EETOPSO import TaskDeviceScheduler
 from leaf.application import ProcessingTask, Application, SourceTask, SinkTask
 from leaf.infrastructure import Infrastructure, Node
 from leaf.power import PowerModelNode

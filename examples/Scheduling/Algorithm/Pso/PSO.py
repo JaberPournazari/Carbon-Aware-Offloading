@@ -6,12 +6,13 @@ import leaf.application
 import leaf.infrastructure
 from leaf.infrastructure import *
 import sys
-from examples.PSO_Scheduling.setting import *
+from examples.Scheduling.setting import *
+import examples.Scheduling.Util.Fitness as ft
 
 class TaskDeviceScheduler:
     # def __init__(self, devices, tasks,infrastructure,applications,num_particles=30, max_iter=100, c1=1.5, c2=1.5, w=0.9,
     #              w_damp=0.99):
-    def __init__(self, devices, tasks, infrastructure, applications, num_particles=30, max_iter=100, c1=1.5, c2=1.5,
+    def __init__(self, devices, tasks, infrastructure, applications, carbon ,num_particles=30, max_iter=100, c1=1.5, c2=1.5,
                  w=0.9, w_damp=0.99):
         self.devices = devices
         self.tasks = tasks
@@ -28,94 +29,20 @@ class TaskDeviceScheduler:
         self.c2 = c2  # Social (swarm) weight
         self.w = w  # Inertia weightx
         self.w_damp = w_damp  # Inertia damping after each iteration
+        self.carbon = carbon
         self.particles_position = np.random.randint(0, self.num_devices, size=(self.num_particles, self.num_tasks))
         self.particles_velocity = np.zeros_like(self.particles_position, dtype=float)
         self.particles_best_position = np.copy(self.particles_position)
-        self.particles_best_score = np.array([self.fitness(pos) for pos in self.particles_best_position])
+        self.particles_best_score = np.array([ft.fitness(pos,self.carbon, self.tasks,self.devices,self.applications,self.infrastructure) for pos in self.particles_best_position])
         self.global_best_position = self.particles_best_position[np.argmin(self.particles_best_score)]
         self.global_best_score = np.min(self.particles_best_score)
         self.best_min_iteration_number = self.max_iter
         self.scheduling_dict={}
 
+
     def __check_multi_params__(self,alpha,beta,gamma,delta):
         if alpha+beta+gamma+delta != 1:
             raise ValueError("Sum of multi-objective parameters should be equal to 1.")
-
-    def fitness(self, positions):
-        # print(positions)
-        positions_set=set(positions)
-        i=0
-        sum_total = 0
-        sum_node=0
-        sum_link=0
-        sum_time=0
-        static=0
-        node_times = [0 for pos in set(self.devices)]
-
-        for pos in positions:
-            self.tasks[i].allocate(self.devices[pos])
-            # self.tasks[i].node.power_model().power_per_cu=self.tasks[i].cu
-
-            # calculating node consumed time
-            node_times[pos] = node_times[pos] + self.tasks[i].cu / self.devices[pos].cu
-
-
-            tmp = self.devices[pos].measure_power()
-            sum_node = sum_node + tmp.dynamic
-
-            if pos in positions_set:
-                sum_node=sum_node+tmp.static
-                positions_set.remove(pos)
-
-            # calculating energy of links. here we do not consider energy linkes.
-            # we will do it later
-            app=self.applications[i]
-
-            #for app in self.applications:
-            for src_task_id, dst_task_id, data_flow in app.graph.edges.data("data"):
-                src_task = app.graph.nodes[src_task_id]["data"]
-                dst_task = app.graph.nodes[dst_task_id]["data"]
-
-                if isinstance(src_task,leaf.application.SourceTask):
-                    shortest_path = nx.shortest_path(self.infrastructure.graph, src_task.bound_node.name,
-                                                     dst_task.node.name)
-                else:
-                    shortest_path = nx.shortest_path(self.infrastructure.graph, src_task.node.name,
-                                                     dst_task.bound_node.name)
-
-                links = [self.infrastructure.graph.edges[a, b, 0]["data"] for a, b in nx.utils.pairwise(shortest_path)]
-                data_flow.allocate(links)
-
-                for link in links:
-                    tmp=link.measure_power()
-                    sum_link=sum_link+tmp.dynamic
-                #TODO: Do not sum duplicated linkes static power
-                #sum_link=sum_link+tmp.static
-
-                #data_flow.deallocate()
-
-            #self.tasks[i].deallocate()
-            i = i + 1
-
-        sum_time = sum(node_times)
-        sum_ram = sum_time * MICROPROCESSORS_POWER_RAM
-        sum_total =sum_node + sum_ram + sum_link
-
-        # print(positions)
-        # print(sum_total)
-        # print('==================')
-
-        for app in self.applications:
-            for src_task_id, dst_task_id, data_flow in app.graph.edges.data("data"):
-                data_flow.deallocate()
-
-        for tsk in self.tasks:
-            tsk.deallocate()
-
-
-
-        # TODO: Do not final sum for fitness
-        return sum_total
 
     def optimize(self):
         print('Starting B-PSO')
@@ -148,7 +75,7 @@ class TaskDeviceScheduler:
                 #========================================
 
                 # Calculate fitness
-                current_fitness = self.fitness(self.particles_position[i])
+                current_fitness = ft.fitness(self.particles_position[i], self.carbon, self.tasks,self.devices,self.applications,self.infrastructure)
 
 
 

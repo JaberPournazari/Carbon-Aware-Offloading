@@ -9,17 +9,17 @@ https://github.com/7ossam81/EvoloPy/blob/master/EvoloPy/solution.py
 
 import random
 import numpy
-import math
 import leaf.application
 import leaf.infrastructure
-from examples.PSO_Scheduling.util import calculate_schedule_carbon
 from leaf.infrastructure import *
-from examples.PSO_Scheduling.setting import *
+from examples.Scheduling.setting import *
+
+import examples.Scheduling.Util.Fitness as ft
 
 class TaskDeviceScheduler:
 
 #def GWO(objf, lb, ub, dim, SearchAgents_no, Max_iter):
-    def __init__(self, devices, tasks, infrastructure, applications, lb, ub, dim, SearchAgents_no, Max_iter):
+    def __init__(self, devices, tasks, infrastructure, applications, lb, ub, dim, SearchAgents_no, Max_iter,carbon):
         # Max_iter=1000
         # lb=-100
         # ub=100
@@ -37,6 +37,7 @@ class TaskDeviceScheduler:
         self.SearchAgents_no = SearchAgents_no
         self.best_min_iteration_number = Max_iter
         self.scheduling_dict={}
+        self.carbon=carbon
 
     def optimize(self):
         Max_iter=self.Max_iter
@@ -82,7 +83,9 @@ class TaskDeviceScheduler:
                     Positions[i, j] = numpy.clip(Positions[i, j], lb[j], ub[j])
 
                 # Calculate objective function for each search agent
-                fitness = self.fitness(Positions[i, :])
+                #fitness = self.fitness(Positions[i, :])
+                fitness = ft.fitness(Positions[i, :], self.carbon, self.tasks,self.devices,self.applications,self.infrastructure)
+
 
                 # Update Alpha, Beta, and Delta
                 if fitness < Alpha_score:
@@ -166,88 +169,6 @@ class TaskDeviceScheduler:
         self.global_best_score = Alpha_score
 
         return Alpha_score
-
-    def fitness(self, positions):
-        # print(positions)
-        positions_set=set(positions)
-        i=0
-        sum_total = 0
-        sum_node=0
-        sum_link=0
-        sum_time=0
-        static=0
-
-        node_times = [0 for pos in set(self.devices)]
-
-
-        for pos in positions:
-            print('pos '+ str(pos))
-            self.tasks[i].allocate(self.devices[pos])
-
-            # self.tasks[i].node.power_model().power_per_cu=self.tasks[i].cu
-
-            # calculating node consumed time
-            node_times[pos] = node_times[pos] + self.tasks[i].cu / self.devices[pos].cu
-
-
-            tmp = self.devices[pos].measure_power()
-            sum_node = sum_node + tmp.dynamic
-
-            if pos in positions_set:
-                sum_node=sum_node+tmp.static
-                positions_set.remove(pos)
-
-
-            # calculating energy of links. here we do not consider energy linkes.
-            # we will do it later
-            app=self.applications[i]
-
-            #for app in self.applications:
-            for src_task_id, dst_task_id, data_flow in app.graph.edges.data("data"):
-                src_task = app.graph.nodes[src_task_id]["data"]
-                dst_task = app.graph.nodes[dst_task_id]["data"]
-
-                if isinstance(src_task,leaf.application.SourceTask):
-                    shortest_path = nx.shortest_path(self.infrastructure.graph, src_task.bound_node.name,
-                                                     dst_task.node.name)
-                else:
-                    shortest_path = nx.shortest_path(self.infrastructure.graph, src_task.node.name,
-                                                     dst_task.bound_node.name)
-
-                links = [self.infrastructure.graph.edges[a, b, 0]["data"] for a, b in nx.utils.pairwise(shortest_path)]
-                data_flow.allocate(links)
-
-                for link in links:
-                    tmp=link.measure_power()
-                    sum_link=sum_link+tmp.dynamic
-                #TODO: Do not sum duplicated linkes static power
-                #sum_link=sum_link+tmp.static
-
-                #data_flow.deallocate()
-
-            #self.tasks[i].deallocate()
-            i = i + 1
-
-        sum_time = sum(node_times)
-        sum_ram = sum_time * MICROPROCESSORS_POWER_RAM
-        sum_total =sum_node + sum_ram + sum_link
-
-
-        # print(positions)
-        # print(sum_total)
-        # print('==================')
-
-
-        for app in self.applications:
-            for src_task_id, dst_task_id, data_flow in app.graph.edges.data("data"):
-                data_flow.deallocate()
-
-
-        for tsk in self.tasks:
-            tsk.deallocate()
-
-        # TODO: Do not final sum for fitness
-        return sum_total
 
     def get_best_assignment(self):
         return self.global_best_position, self.global_best_score

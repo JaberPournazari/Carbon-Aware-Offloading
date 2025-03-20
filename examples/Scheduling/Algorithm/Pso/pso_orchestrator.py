@@ -1,6 +1,5 @@
-from examples.PSO_Scheduling.Pso.PSO import TaskDeviceScheduler
-from examples.PSO_Scheduling.Pso.PSO_Carbon import TaskDeviceScheduler as carbonTaskDeviceScheduler
-from examples.PSO_Scheduling.comparing_orchestrator import comparing_orchestrator
+from examples.Scheduling.Algorithm.Pso.PSO import TaskDeviceScheduler
+from examples.Scheduling.comparing_orchestrator import comparing_orchestrator
 
 
 class PSOOrchestrator(comparing_orchestrator):
@@ -29,17 +28,14 @@ class PSOOrchestrator(comparing_orchestrator):
         self.w_damp=w_damp
 
 
-
         if carbon==True:
             self.legend = 'Carbon-PSO'
-            self.scheduler = carbonTaskDeviceScheduler(self.devices, self.tasks, self.infrastructure, self.applications,
-                                                 num_particles=self.num_particles, max_iter=self.max_iter, c1=self.c1,
-                                                 c2=self.c2, w=self.w, w_damp=self.w_damp)
         else:
             self.legend = 'B-PSO'
-            self.scheduler = TaskDeviceScheduler(self.devices, self.tasks, self.infrastructure, self.applications,
-                                                 num_particles=self.num_particles, max_iter=self.max_iter, c1=self.c1,
-                                                 c2=self.c2, w=self.w, w_damp=self.w_damp)
+
+        self.scheduler = TaskDeviceScheduler(self.devices, self.tasks, self.infrastructure, self.applications,carbon,
+                                             num_particles=self.num_particles, max_iter=self.max_iter, c1=self.c1,
+                                             c2=self.c2, w=self.w, w_damp=self.w_damp)
 
 
         super().__init__(infrastructure, applications, self.scheduler)

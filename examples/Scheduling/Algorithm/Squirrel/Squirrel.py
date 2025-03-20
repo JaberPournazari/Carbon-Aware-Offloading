@@ -3,9 +3,8 @@ import random
 
 import leaf.application
 import leaf.infrastructure
-from examples.PSO_Scheduling.util import calculate_schedule_carbon
 from leaf.infrastructure import *
-from examples.PSO_Scheduling.setting import *
+from examples.Scheduling.setting import *
 
 #calling this algorithm:
 # Define the objective function (e.g., Sphere function)

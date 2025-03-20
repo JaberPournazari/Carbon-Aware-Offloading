@@ -1,6 +1,6 @@
-from examples.PSO_Scheduling.comparing_orchestrator import comparing_orchestrator
-from examples.PSO_Scheduling.Squirrel.Squirrel import TaskDeviceScheduler
-from examples.PSO_Scheduling.Squirrel.Squirrel_Carbon import TaskDeviceScheduler as carbonTaskDeviceScheduler
+from examples.Scheduling.comparing_orchestrator import comparing_orchestrator
+from examples.Scheduling.Algorithm.Squirrel.Squirrel import TaskDeviceScheduler
+from examples.Scheduling.Algorithm.Squirrel.Squirrel_Carbon import TaskDeviceScheduler as carbonTaskDeviceScheduler
 
 class SquirrelOrchestrator(comparing_orchestrator):
     def __init__(self, devices, tasks, infrastructure, applications, bounds, num_squirrels, max_iter, gl, pc, pd,carbon=False):

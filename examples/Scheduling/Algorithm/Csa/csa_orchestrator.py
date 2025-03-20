@@ -1,8 +1,7 @@
 import numpy as np
 
-from examples.PSO_Scheduling.Csa.CSA import TaskDeviceScheduler
-from examples.PSO_Scheduling.Csa.CSA_Carbon import TaskDeviceScheduler as carbonTaskDeviceScheduler
-from examples.PSO_Scheduling.comparing_orchestrator import comparing_orchestrator
+from examples.Scheduling.Algorithm.Csa.CSA import TaskDeviceScheduler
+from examples.Scheduling.comparing_orchestrator import comparing_orchestrator
 
 
 class CsaOrchestrator(comparing_orchestrator):
@@ -36,16 +35,14 @@ class CsaOrchestrator(comparing_orchestrator):
 
         if carbon == True:
             self.legend = 'Carbon-CSA'
-            self.scheduler = carbonTaskDeviceScheduler(self.devices, self.tasks, self.infrastructure, self.applications,
-                                                 alpha=self.alpha, beta=self.beta, gamma=self.gamma, delta=self.delta,
-                                                 population_size=population_size, ap=self.ap, fL=self.fL,
-                                                 min_values=zeros, max_values=max_values,
-                                                 iterations=self.max_iter, verbose=False)
         else:
             self.legend = 'B-CSA'
-            self.scheduler = TaskDeviceScheduler(self.devices, self.tasks, self.infrastructure, self.applications,
-                                                 alpha=self.alpha, beta=self.beta, gamma=self.gamma, delta=self.delta,
-                population_size=population_size, ap=self.ap, fL=self.fL, min_values=zeros , max_values=max_values,
-                                                 iterations=self.max_iter, verbose=False)
+
+        self.scheduler = TaskDeviceScheduler(self.devices, self.tasks, self.infrastructure, self.applications,carbon,
+                                             alpha=self.alpha, beta=self.beta, gamma=self.gamma, delta=self.delta,
+                                             population_size=population_size, ap=self.ap, fL=self.fL, min_values=zeros,
+                                             max_values=max_values,
+                                             iterations=self.max_iter, verbose=False)
+
 
         super().__init__(infrastructure, applications, self.scheduler)

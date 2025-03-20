@@ -1,6 +1,5 @@
-from examples.PSO_Scheduling import plot_generator
-from examples.PSO_Scheduling.util import *
-from examples.PSO_Scheduling.plot_generator import *
+from examples.Scheduling.Util import plot_generator
+from examples.Scheduling.Util.plot_generator import *
 
 
 #
@@ -81,7 +80,7 @@ count_tasks_on_nodes_file_names=['ResultsCsv/psoorchestrator-count-tasks-on-node
                                  'ResultsCsv/csaorchestrator-count-tasks-on-nodes']
 arrays=[]
 for file in count_tasks_on_nodes_file_names:
-    temp_arr=util.read_data(file)
+    temp_arr= util.read_data(file)
     arrays.append([int(i) for i in temp_arr[0]])
 
-plot_generator.plot_task_distribution(arrays[0],arrays[1])
+plot_generator.plot_task_distribution(arrays[0], arrays[1])

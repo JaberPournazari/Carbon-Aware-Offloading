@@ -1,17 +1,16 @@
 import networkx as nx
 
-import examples.PSO_Scheduling.Gwo.GWO
-from examples.PSO_Scheduling.setting import MICROPROCESSORS_POWER_RAM
+import examples.Scheduling.Algorithm.Squirrel.Squirrel
+from examples.Scheduling.setting import MICROPROCESSORS_POWER_RAM
+from examples.Scheduling.Util.util import calculate_schedule_carbon
 
 import leaf.application
 import leaf.infrastructure
-from examples.PSO_Scheduling.util import calculate_schedule_carbon
 from leaf.infrastructure import *
 
-class TaskDeviceScheduler(examples.PSO_Scheduling.Gwo.GWO.TaskDeviceScheduler):
-    def __init__(self, devices, tasks, infrastructure, applications, lb, ub, dim, SearchAgents_no, Max_iter):
-
-        super().__init__(devices, tasks, infrastructure, applications, lb, ub, dim, SearchAgents_no, Max_iter)
+class TaskDeviceScheduler(examples.Scheduling.Algorithm.Squirrel.Squirrel.TaskDeviceScheduler):
+    def __init__(self, devices, tasks, infrastructure, applications, bounds, num_squirrels, max_iter, gl, pc, pd):
+        super().__init__(devices, tasks, infrastructure, applications, bounds, num_squirrels, max_iter, gl, pc, pd)
 
     def fitness(self, positions):
         # print(positions)

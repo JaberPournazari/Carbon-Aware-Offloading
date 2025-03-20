@@ -3,16 +3,18 @@ import random, sys
 import simpy
 import numpy as np
 
+
+
 sys.path.append("C:\\Carbon-Aware-Offloading")
 
-from examples.PSO_Scheduling.Csa.csa_orchestrator import CsaOrchestrator
-from examples.PSO_Scheduling.Pso.pso_orchestrator import PSOOrchestrator
-from examples.PSO_Scheduling.Gwo.GWO_orchestrator import GWOOrchestrator
-from examples.PSO_Scheduling.setting import *
+from examples.Scheduling.Algorithm.Csa.csa_orchestrator import CsaOrchestrator
+from examples.Scheduling.Algorithm.Pso.pso_orchestrator import PSOOrchestrator
+from examples.Scheduling.Algorithm.Gwo.GWO_orchestrator import GWOOrchestrator
+from examples.Scheduling.setting import *
 from leaf.application import Application, SourceTask, ProcessingTask, SinkTask
 from leaf.infrastructure import Node, Link, Infrastructure, NodeCarbon
 from leaf.power import PowerModelNode, PowerModelLink, PowerMeter, PowerModelNodeCarbon
-import util, plot_generator
+from examples.Scheduling.Util import util, plot_generator
 
 logging.getLogger('matplotlib.font_manager').disabled = True
 
