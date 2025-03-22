@@ -14,7 +14,8 @@ from examples.Scheduling.setting import *
 from leaf.application import Application, SourceTask, ProcessingTask, SinkTask
 from leaf.infrastructure import Node, Link, Infrastructure, NodeCarbon
 from leaf.power import PowerModelNode, PowerModelLink, PowerMeter, PowerModelNodeCarbon
-from examples.Scheduling.Util import util, plot_generator
+from examples.Scheduling.Util import util, plot_generator, infrastructure_writer, infrastructure_reader
+
 
 logging.getLogger('matplotlib.font_manager').disabled = True
 
@@ -40,50 +41,97 @@ tasks_require_cu = []
 
 
 ########################## NEW @@@@@@@@@@@@@@@
-def create_sensors():
-    for current_sensor_index in range(NO_SENSORS):
-        max_power = random.gauss(SENSOR_MAX_POWER_MEAN, SENSOR_MAX_POWER_STD_DEVIATION)
-        static_power = random.gauss(SENSOR_STATIC_POWER_MEAN, SENSOR_STATIC_POWER_STD_DEVIATION)
-        cu = random.gauss(SENSOR_CU_POWER_MEAN, SENSOR_CU_STD_DEVIATION)
-        sensor_node = Node(type="sensor", name=f"Sensor_{current_sensor_index}", cu=cu,
-                           power_model=PowerModelNode(static_power=static_power, max_power=max_power),
-                           initial_power=SENSOR_INITIAL_POWER_MEAN,
-                           remaining_power=SENSOR_REMAINING_POWER_MEAN)
+def create_sensors(sensor_data=None,sensor_statics_data=None):
+    if sensor_data is not None and sensor_statics_data is not None:
+        #create sensors from saved dataset
+        static0= sensor_statics_data[0]
+        static1= sensor_statics_data[1]
+        for current_sensor_index in range(NO_SENSORS):
+            max_power = sensor_data[current_sensor_index][0]
+            static_power = sensor_data[current_sensor_index][1]
+            cu = sensor_data[current_sensor_index][2]
+            sensor_node = Node(type="sensor", name=f"Sensor_{current_sensor_index}", cu=cu,
+                               power_model=PowerModelNode(static_power=static_power, max_power=max_power),
+                               initial_power=static0,
+                               remaining_power=static1)
 
-        sensor_nodes.append(sensor_node)
-        infrastructure.add_node(sensor_node)
+            sensor_nodes.append(sensor_node)
+            infrastructure.add_node(sensor_node)
+    else:
+        #create sensors randomly
+        for current_sensor_index in range(NO_SENSORS):
+            max_power = random.gauss(SENSOR_MAX_POWER_MEAN, SENSOR_MAX_POWER_STD_DEVIATION)
+            static_power = random.gauss(SENSOR_STATIC_POWER_MEAN, SENSOR_STATIC_POWER_STD_DEVIATION)
+            cu = round(random.gauss(SENSOR_CU_POWER_MEAN, SENSOR_CU_STD_DEVIATION),2)
+            sensor_node = Node(type="sensor", name=f"Sensor_{current_sensor_index}", cu=cu,
+                               power_model=PowerModelNode(static_power=static_power, max_power=max_power),
+                               initial_power=SENSOR_INITIAL_POWER_MEAN,
+                               remaining_power=SENSOR_REMAINING_POWER_MEAN)
+
+            sensor_nodes.append(sensor_node)
+            infrastructure.add_node(sensor_node)
+
     return sensor_nodes
 
 
-def create_fogs(counts):
-    power_per_cu = 0.00035
-    for index in range(counts):
-        # max_power = random.gauss(MICROPROCESSORS_MAX_POWER_MEAN, MICROPROCESSORS_MAX_POWER_STD_DEVIATION)
-        max_power = random.uniform(MICROPROCESSORS_MAX_POWER_MEAN - MICROPROCESSORS_MAX_POWER_STD_DEVIATION,
-                                   MICROPROCESSORS_MAX_POWER_MEAN + MICROPROCESSORS_MAX_POWER_STD_DEVIATION)
+def create_fogs(counts,nodes_data=None,nodes_statics_data=None):
+    if nodes_data is not None and nodes_statics_data is not None:
+        nodes_statics0=nodes_statics_data[0]
+        nodes_statics1=nodes_statics_data[1]
+        nodes_statics2=nodes_statics_data[2]
+        nodes_statics3=nodes_statics_data[3]
 
-        static_power = random.uniform(MICROPROCESSORS_STATIC_POWER_MEAN - MICROPROCESSORS_STATIC_POWER_STD_DEVIATION,
-                                      MICROPROCESSORS_STATIC_POWER_MEAN + MICROPROCESSORS_STATIC_POWER_STD_DEVIATION)
+        for index in range(counts):
+            cu = int(nodes_data[index][0])
+            # we use percent of nodes as carbon free
+            if nodes_data[index][2]=='c':
+                fog_node = NodeCarbon(type="carbonfree", name=f"fog_{index}", cu=cu,
+                                      power_model=PowerModelNodeCarbon(.25, power_per_cu=nodes_statics3,
+                                                                       static_power=float(nodes_data[index][1])),
+                                      initial_power=nodes_statics0,
+                                      remaining_power=nodes_statics1,
+                                      battery_power=nodes_statics2
+                                      )
+            else:
+                fog_node = Node(type="fog", name=f"fog_{index}", cu=cu,
+                                power_model=PowerModelNode(power_per_cu=nodes_statics3, static_power=float(nodes_data[index][1])),
+                                initial_power=nodes_statics0,
+                                remaining_power=nodes_statics1)
+            fog_nodes.append(fog_node)
+            infrastructure.add_node(fog_node)
+    else:
+        #Create Nodes randomly
+        for index in range(counts):
+            max_power = random.uniform(MICROPROCESSORS_MAX_POWER_MEAN - MICROPROCESSORS_MAX_POWER_STD_DEVIATION,
+                                       MICROPROCESSORS_MAX_POWER_MEAN + MICROPROCESSORS_MAX_POWER_STD_DEVIATION)
 
-        cu = random.uniform(MICROPROCESSORS_CU_POWER_MEAN - MICROPROCESSORS_CU_STD_DEVIATION,
-                            MICROPROCESSORS_CU_POWER_MEAN + MICROPROCESSORS_CU_STD_DEVIATION)
+            static_power = random.uniform(MICROPROCESSORS_STATIC_POWER_MEAN - MICROPROCESSORS_STATIC_POWER_STD_DEVIATION,
+                                          MICROPROCESSORS_STATIC_POWER_MEAN + MICROPROCESSORS_STATIC_POWER_STD_DEVIATION)
 
-        # we use percent of nodes as carbon free
-        if index < counts * 0.5:
-            fog_node = NodeCarbon(type="carbonfree", name=f"fog_{index}", cu=cu,
-                                  power_model=PowerModelNodeCarbon(.25, power_per_cu=power_per_cu,
-                                                                   static_power=static_power),
-                                  initial_power=MICROPROCESSORS_INITIAL_POWER_MEAN,
-                                  remaining_power=MICROPROCESSORS_REMAINING_POWER_MEAN,
-                                  battery_power=MICROPROCESSORS_BATTERY_POWER
-                                  )
-        else:
-            fog_node = Node(type="fog", name=f"fog_{index}", cu=cu,
-                            power_model=PowerModelNode(power_per_cu=power_per_cu, static_power=static_power),
-                            initial_power=MICROPROCESSORS_INITIAL_POWER_MEAN,
-                            remaining_power=MICROPROCESSORS_REMAINING_POWER_MEAN)
-        fog_nodes.append(fog_node)
-        infrastructure.add_node(fog_node)
+            static_power = round(static_power, 3)
+
+            cu = random.uniform(MICROPROCESSORS_CU_POWER_MEAN - MICROPROCESSORS_CU_STD_DEVIATION,
+                                MICROPROCESSORS_CU_POWER_MEAN + MICROPROCESSORS_CU_STD_DEVIATION)
+
+            cu = round(cu)
+
+            # we use percent of nodes as carbon free
+            if index < counts * 0.5:
+                fog_node = NodeCarbon(type="carbonfree", name=f"fog_{index}", cu=cu,
+                                      power_model=PowerModelNodeCarbon(.25, power_per_cu=MICROPROCESSORS_POWER_PER_CU,
+                                                                       static_power=static_power),
+                                      initial_power=MICROPROCESSORS_INITIAL_POWER_MEAN,
+                                      remaining_power=MICROPROCESSORS_REMAINING_POWER_MEAN,
+                                      battery_power=MICROPROCESSORS_BATTERY_POWER
+                                      )
+            else:
+                fog_node = Node(type="fog", name=f"fog_{index}", cu=cu,
+                                power_model=PowerModelNode(power_per_cu=MICROPROCESSORS_POWER_PER_CU,
+                                                           static_power=static_power),
+                                initial_power=MICROPROCESSORS_INITIAL_POWER_MEAN,
+                                remaining_power=MICROPROCESSORS_REMAINING_POWER_MEAN)
+            fog_nodes.append(fog_node)
+            infrastructure.add_node(fog_node)
 
     return fog_nodes
 
@@ -117,29 +165,50 @@ def create_links_to_cloud():
 applications = []
 
 
-def create_applications(sensor_nodes, cloud_nodes):
+def create_applications(sensor_nodes, cloud_nodes,task_cus=None):
     global processing_task_id
-    for sensor in sensor_nodes:
-        # cu=0.9 * sensor.power_model.max_power
-        app1_source_task = SourceTask(cu=0.9 * sensor.power_model.max_power, bound_node=sensor)
+    if task_cus is not None:
+        i=0
+        for sensor in sensor_nodes:
+            # cu=0.9 * sensor.power_model.max_power
+            app1_source_task = SourceTask(cu=0.9 * sensor.power_model.max_power, bound_node=sensor)
 
-        task_size = random.randint(TASK_MEAN - TASK_STD_DEVIATION, TASK_MEAN + TASK_STD_DEVIATION)
+            app1_processing_task = ProcessingTask(cu=task_cus[i])
+            app1_processing_task.scheduling_id = processing_task_id
+            processing_task_id = processing_task_id + 1
 
-        app1_processing_task = ProcessingTask(cu=task_size)
-        app1_processing_task.scheduling_id = processing_task_id
-        processing_task_id = processing_task_id + 1
+            # TODO: we consider one cloud, so we set index [0]
+            app1_sink_task = SinkTask(cu=150, bound_node=cloud_nodes[0])
 
-        # TODO: we consider one cloud, so we set index [0]
-        app1_sink_task = SinkTask(cu=150, bound_node=cloud_nodes[0])
+            application = Application()  # name=f"Application{sensor.name}"
+            application.name = f"Application_{len(applications)}"
+            application.add_task(app1_source_task)
+            application.add_task(app1_processing_task, incoming_data_flows=[(app1_source_task, 1000)])
+            application.add_task(app1_sink_task, incoming_data_flows=[(app1_processing_task, 300)])
 
-        application = Application()  # name=f"Application{sensor.name}"
-        application.name = f"Application_{len(applications)}"
-        application.add_task(app1_source_task)
-        application.add_task(app1_processing_task, incoming_data_flows=[(app1_source_task, 1000)])
-        application.add_task(app1_sink_task, incoming_data_flows=[(app1_processing_task, 300)])
+            applications.append(application)
+            i=i+1
+    else:
+        for sensor in sensor_nodes:
+            # cu=0.9 * sensor.power_model.max_power
+            app1_source_task = SourceTask(cu=0.9 * sensor.power_model.max_power, bound_node=sensor)
 
-        applications.append(application)
-        # print(app1_source_task)
+            task_size = random.randint(TASK_MEAN - TASK_STD_DEVIATION, TASK_MEAN + TASK_STD_DEVIATION)
+
+            app1_processing_task = ProcessingTask(cu=task_size)
+            app1_processing_task.scheduling_id = processing_task_id
+            processing_task_id = processing_task_id + 1
+
+            # TODO: we consider one cloud, so we set index [0]
+            app1_sink_task = SinkTask(cu=150, bound_node=cloud_nodes[0])
+
+            application = Application()  # name=f"Application{sensor.name}"
+            application.name = f"Application_{len(applications)}"
+            application.add_task(app1_source_task)
+            application.add_task(app1_processing_task, incoming_data_flows=[(app1_source_task, 1000)])
+            application.add_task(app1_sink_task, incoming_data_flows=[(app1_processing_task, 300)])
+
+            applications.append(application)
 
 
 def show_application_info():
@@ -164,22 +233,61 @@ def show_application_info():
 
 
 def main():
-    ########################## NEW @@@@@@@@@@@@@@@
-    sensor_nodes = create_sensors()
-    # fog_nodes = create_fogs(sensor_nodes[1:len(sensor_nodes) // 2])
-    fog_nodes = create_fogs(NUMBER_OF_FOGS)
+    generate_new_dataset=False
 
-    cloud_node = Node(type='cloud', name=f"cloud", power_model=PowerModelNode(power_per_cu=SERVER_POWER_PER_CU,
-                                                                              static_power=SERVER_STATIC_POWER))  # sink
-    cloud_nodes.append(cloud_node)
-    infrastructure.add_node(cloud_node)
-    ##################################################
+    if generate_new_dataset:
+        ########################## NEW @@@@@@@@@@@@@@@
+        sensor_nodes = create_sensors()
+        # fog_nodes = create_fogs(sensor_nodes[1:len(sensor_nodes) // 2])
+        nodes=create_fogs(NUMBER_OF_FOGS)
 
-    create_links_to_cloud()
-    create_links_from_sensors()
+        cloud_node = Node(type='cloud', name=f"cloud", power_model=PowerModelNode(power_per_cu=SERVER_POWER_PER_CU,
+                                                                                  static_power=SERVER_STATIC_POWER))  # sink
+        cloud_nodes.append(cloud_node)
+        infrastructure.add_node(cloud_node)
+        ##################################################
 
-    create_applications(sensor_nodes, cloud_nodes)
-    show_application_info()
+        create_links_to_cloud()
+        create_links_from_sensors()
+
+        create_applications(sensor_nodes, cloud_nodes)
+        show_application_info()
+
+
+        infrastructure_writer.write_sensors(sensor_nodes)
+        infrastructure_writer.write_sensor_statics()
+
+        infrastructure_writer.write_nodes(nodes)
+        infrastructure_writer.write_nodes_statics()
+
+        infrastructure_writer.write_applications(applications)
+
+    else:
+        sensor_statics_data=infrastructure_reader.read_sensor_statics()
+        sensor_data=infrastructure_reader.read_sensors()
+
+        nodes_statics_data=infrastructure_reader.read_nodes_statics()
+        nodes_data=infrastructure_reader.read_nodes()
+
+        sensor_nodes = create_sensors(sensor_data,sensor_statics_data)
+        nodes = create_fogs(NUMBER_OF_FOGS,nodes_data,nodes_statics_data)
+        tasks_cus=infrastructure_reader.read_applications()
+
+
+
+        cloud_node = Node(type='cloud', name=f"cloud", power_model=PowerModelNode(power_per_cu=SERVER_POWER_PER_CU,
+                                                                                  static_power=SERVER_STATIC_POWER))  # sink
+        cloud_nodes.append(cloud_node)
+        infrastructure.add_node(cloud_node)
+        ##################################################
+
+        create_links_to_cloud()
+        create_links_from_sensors()
+
+        create_applications(sensor_nodes, cloud_nodes,tasks_cus)
+        show_application_info()
+
+
 
     generate_devices_from_infrastructure()
 
