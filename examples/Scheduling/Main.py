@@ -10,6 +10,7 @@ sys.path.append("C:\\Carbon-Aware-Offloading")
 from examples.Scheduling.Algorithm.Csa.csa_orchestrator import CsaOrchestrator
 from examples.Scheduling.Algorithm.Pso.pso_orchestrator import PSOOrchestrator
 from examples.Scheduling.Algorithm.Gwo.GWO_orchestrator import GWOOrchestrator
+from examples.Scheduling.Algorithm.Squirrel.Squirrel_orchestrator import SquirrelOrchestrator
 from examples.Scheduling.setting import *
 from leaf.application import Application, SourceTask, ProcessingTask, SinkTask
 from leaf.infrastructure import Node, Link, Infrastructure, NodeCarbon
@@ -308,6 +309,10 @@ def main():
     orchestrator_list.append(
         GWOOrchestrator(infrastructure, applications, devices, tasks,carbon_aware, lb=0, ub=len(devices) - 1, dim=len(tasks),
                         SearchAgents_no=5, Max_iter=50))
+
+    #bounds = [(-100, 100)] * 10  # 10-dimensional problem
+    orchestrator_list.append(
+        SquirrelOrchestrator(infrastructure, applications, devices, tasks,[(0,len(devices) - 1)] * len(tasks),30,50,0.9,0.1,0.1))
 
     # Create name for files
     orchestrator_class_name_ls = []

@@ -1,9 +1,8 @@
 from examples.Scheduling.comparing_orchestrator import comparing_orchestrator
 from examples.Scheduling.Algorithm.Squirrel.Squirrel import TaskDeviceScheduler
-from examples.Scheduling.Algorithm.Squirrel.Squirrel_Carbon import TaskDeviceScheduler as carbonTaskDeviceScheduler
 
 class SquirrelOrchestrator(comparing_orchestrator):
-    def __init__(self, devices, tasks, infrastructure, applications, bounds, num_squirrels, max_iter, gl, pc, pd,carbon=False):
+    def __init__(self,  infrastructure, applications, devices, tasks, bounds, num_squirrels, max_iter, gl, pc, pd,carbon=False):
         self.devices = devices
         self.tasks = tasks
         self.infrastructure = infrastructure
@@ -17,9 +16,9 @@ class SquirrelOrchestrator(comparing_orchestrator):
 
         if carbon == True:
             self.legend = 'Carbon-Squirell'
-            self.scheduler= carbonTaskDeviceScheduler(devices, tasks, infrastructure, applications,bounds, num_squirrels, max_iter, gl, pc, pd)
         else:
             self.legend = 'Squirell'
-            self.scheduler = TaskDeviceScheduler(devices, tasks, infrastructure, applications,bounds, num_squirrels, max_iter, gl, pc, pd)
+
+        self.scheduler = TaskDeviceScheduler(devices, tasks, infrastructure, applications,bounds, num_squirrels, max_iter, gl, pc, pd,carbon)
 
         super().__init__(infrastructure, applications, self.scheduler)

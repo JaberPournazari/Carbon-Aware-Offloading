@@ -4,7 +4,7 @@ from examples.Scheduling.Algorithm.Gwo.GWO import TaskDeviceScheduler
 
 
 class GWOOrchestrator(comparing_orchestrator):
-    def __init__(self, infrastructure, applications, devices, tasks, carbon=False, lb=-100, ub=100, dim=30, SearchAgents_no=5
+    def __init__(self, infrastructure, applications, devices, tasks, carbon=False, lb=-100, ub=100, dim=30, SearchAgents_no=30
                  , Max_iter=1000):
         self.devices = devices
         self.tasks = tasks
