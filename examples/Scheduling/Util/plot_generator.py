@@ -1,6 +1,13 @@
+import os
+import re
+import csv
+
 import numpy as np
 from matplotlib import pyplot as plt
 from examples.Scheduling.Util import util
+
+from collections import defaultdict
+
 
 
 def generate_plot(list_fitness):
@@ -298,3 +305,103 @@ def plot_task_min_iterations(task_lists, iteration_lists, labels, colors, width=
     plt.show()
 
 
+def plot_carbon_and_simple():
+    import matplotlib.pyplot as plt
+    import os
+    import re
+    import csv
+    from collections import defaultdict
+    import numpy as np
+
+    # Directory containing your CSV files
+    data_dir = 'C:/Carbon-Aware-Offloading/examples/Scheduling/resultscsv/Emissions'  # Or use a raw string: r'C:\...'
+
+    # Dictionary to store data for plotting
+    plot_data = defaultdict(lambda: defaultdict(lambda: defaultdict(float)))
+
+    # Regular expression to extract algorithm names (handling the 'carbon-' prefix)
+    algorithm_regex = re.compile(r'(carbon-)?(.*)-node-emissions-total\.csv')
+
+    # Collect data from CSV files
+    for filename in os.listdir(data_dir):
+        match = algorithm_regex.match(filename)
+        if match:
+            is_carbon_prefix, algorithm_base_name = match.groups()
+            algorithm_name = algorithm_base_name.replace('-', ' ').strip()  # Clean up algorithm name for display
+            data_type = 'carbon_aware' if is_carbon_prefix == 'carbon-' else 'simple'
+            file_path = os.path.join(data_dir, filename)
+            try:
+                with open(file_path, 'r') as csvfile:
+                    reader = csv.reader(csvfile)
+                    for row in reader:
+                        try:
+                            node_count = int(row[0])
+                            emission_rate = float(row[1])
+                            plot_data[algorithm_name][data_type][node_count] = emission_rate
+                        except (ValueError, IndexError):
+                            print(f"Skipping invalid row in {filename}: {row}")
+            except FileNotFoundError:
+                print(f"Error: File not found: {file_path}")
+                continue
+
+    # Define base colors for algorithm groups
+    algorithm_base_names = sorted(plot_data.keys())
+    num_algorithms = len(algorithm_base_names)
+    base_colors = plt.cm.get_cmap('viridis', num_algorithms)  # Colormap for algorithm groups
+
+    # Define hatch styles
+    hatch_map = {'simple': None, 'carbon_aware': '///'}
+
+    # Get unique number of nodes across all algorithms
+    all_nodes = sorted(list(set(node for alg_data in plot_data.values()
+                                for type_data in alg_data.values()
+                                for node in type_data.keys())))
+
+    # Set the width of the bars
+    bar_width = 0.35
+
+    # Create the plot
+    fig, ax = plt.subplots(figsize=(16, 8))
+
+    # Calculate positions for the bars within each algorithm group
+    x = range(len(all_nodes))
+    group_width = 2 * bar_width + 0.2  # Total width for simple and carbon-aware bars + spacing
+
+    for i, alg_base in enumerate(algorithm_base_names):
+        x_center = i * group_width
+        base_color = base_colors(i)
+
+        # Plot 'simple' bar(s)
+        if 'simple' in plot_data[alg_base]:
+            for j, node in enumerate(sorted(plot_data[alg_base]['simple'].keys())):
+                emission = plot_data[alg_base]['simple'][node]
+                x_pos = x_center - bar_width / 2 + all_nodes.index(node) * group_width / len(all_nodes)
+                ax.bar(x_pos, emission, bar_width, label=f'{alg_base} (Simple)', color=base_color)
+
+        # Plot 'carbon_aware' bar(s)
+        if 'carbon_aware' in plot_data[alg_base]:
+            for j, node in enumerate(sorted(plot_data[alg_base]['carbon_aware'].keys())):
+                emission = plot_data[alg_base]['carbon_aware'][node]
+                x_pos = x_center + bar_width / 2 + all_nodes.index(node) * group_width / len(all_nodes)
+                ax.bar(x_pos, emission, bar_width, label=f'{alg_base} (Carbon-Aware)',
+                       color=base_color, hatch=hatch_map['carbon_aware'], edgecolor='black')
+
+    # Set x-axis labels and ticks
+    ax.set_xticks([i * group_width for i in range(num_algorithms)])
+    ax.set_xticklabels(algorithm_base_names, rotation=45, ha='right')
+    ax.set_xlabel("Algorithm")
+
+    # Set y-axis label
+    ax.set_ylabel("CO2 Emission Rate")
+
+    # Set the title of the plot
+    ax.set_title("CO2 Emission Comparison of Algorithms")
+
+    # Add a legend
+    ax.legend()
+
+    # Adjust layout to prevent labels from overlapping
+    plt.tight_layout()
+
+    # Show the plot
+    plt.show()

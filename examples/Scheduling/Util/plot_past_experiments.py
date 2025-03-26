@@ -2,8 +2,11 @@ from examples.Scheduling.Util import plot_generator
 from examples.Scheduling.Util.plot_generator import *
 
 
+plot_carbon_and_simple()
+
+
 #
-orchestrator_class_name_ls=['pso_orchestrator','csa_orchestrator']
+#orchestrator_class_name_ls=['pso_orchestrator','csa_orchestrator']
 # total_energy_file_names=['ResultsCsv/results 100 task with 10 20 50 70 nodes/psoorchestrator-node-energy-total',
 #                          'ResultsCsv/results 100 task with 10 20 50 70 nodes/csaorchestrator-node-energy-total']
 #
@@ -48,8 +51,8 @@ orchestrator_class_name_ls=['pso_orchestrator','csa_orchestrator']
 
 
 # read file names automatically based on the name of the class (Energy of Applications)
-total_application_energy_file_names = ['ResultsCsv/psoorchestrator-application-energy-total',
-                                       'ResultsCsv/csaorchestrator-application-energy-total']
+# total_application_energy_file_names = ['ResultsCsv/psoorchestrator-application-energy-total',
+#                                        'ResultsCsv/csaorchestrator-application-energy-total']
 # plot_generator.plot_total(
 #     total_application_energy_file_names, orchestrator_class_name_ls, 'Number of Applications', 'Energy(w)',
 #     'Computing energy consumptions based on number of applications')
@@ -70,17 +73,17 @@ total_application_energy_file_names = ['ResultsCsv/psoorchestrator-application-e
 
 
 # read file names automatically based on the name of the class (Ram energy of Applications)
-total_time_application_file_names = ['ResultsCsv/psoorchestrator-execution-time-total',
-                                     'ResultsCsv/csaorchestrator-execution-time-total']
-plot_generator.plot_total(
-    total_time_application_file_names, orchestrator_class_name_ls, 'Number of Applications', 'Time(s)',
-    'Execution time based on number of applications')
-
-count_tasks_on_nodes_file_names=['ResultsCsv/psoorchestrator-count-tasks-on-nodes',
-                                 'ResultsCsv/csaorchestrator-count-tasks-on-nodes']
-arrays=[]
-for file in count_tasks_on_nodes_file_names:
-    temp_arr= util.read_data(file)
-    arrays.append([int(i) for i in temp_arr[0]])
-
-plot_generator.plot_task_distribution(arrays[0], arrays[1])
+# total_time_application_file_names = ['ResultsCsv/psoorchestrator-execution-time-total',
+#                                      'ResultsCsv/csaorchestrator-execution-time-total']
+# plot_generator.plot_total(
+#     total_time_application_file_names, orchestrator_class_name_ls, 'Number of Applications', 'Time(s)',
+#     'Execution time based on number of applications')
+#
+# count_tasks_on_nodes_file_names=['ResultsCsv/psoorchestrator-count-tasks-on-nodes',
+#                                  'ResultsCsv/csaorchestrator-count-tasks-on-nodes']
+# arrays=[]
+# for file in count_tasks_on_nodes_file_names:
+#     temp_arr= util.read_data(file)
+#     arrays.append([int(i) for i in temp_arr[0]])
+#
+# plot_generator.plot_task_distribution(arrays[0], arrays[1])

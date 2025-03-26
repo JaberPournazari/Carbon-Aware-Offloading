@@ -34,7 +34,7 @@ class CsaOrchestrator(comparing_orchestrator):
         max_values = [i * (len(devices)-1) for i in ones]
 
         if carbon == True:
-            self.legend = 'Carbon-CSA'
+            self.legend = 'Carbon-B-CSA'
         else:
             self.legend = 'B-CSA'
 

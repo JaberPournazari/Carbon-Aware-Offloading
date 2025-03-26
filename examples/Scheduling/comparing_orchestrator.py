@@ -90,7 +90,7 @@ class comparing_orchestrator(Orchestrator):
         sum_ram = sum_time * MICROPROCESSORS_POWER_RAM
 
         write_total(sum_time, f'{orchestrator_legend}-node-time', devices_len)
-        write_total(sum_ram, f'{orchestrator_legend}-ram-energy-node', devices_len)
+        #write_total(sum_ram, f'{orchestrator_legend}-ram-energy-node', devices_len)
 
         node_energies = []
         # power_nodes_ls = [n.measure_power() for n in infrastructure.nodes() if n.type == 'fog']
@@ -111,7 +111,7 @@ class comparing_orchestrator(Orchestrator):
         write_total(sum_emission, f'{orchestrator_legend}-node-emissions', devices_len)
 
         # write results in separate files with static and dynamic values
-        write_to_csv(node_energies, f'{orchestrator_legend}-node-energy')
+        #write_to_csv(node_energies, f'{orchestrator_legend}-node-energy')
 
 
         # This list is for generating plot of how many tasks will be executing on each node
@@ -121,20 +121,20 @@ class comparing_orchestrator(Orchestrator):
             count_tasks_on_nodes[positions[i]] = count_tasks_on_nodes[positions[i]] + 1
 
         # generate_plot_count_tasks_on_nodes(count_tasks_on_nodes)
-        write_data(f'ResultsCsv/{orchestrator_legend}-count-tasks-on-nodes', count_tasks_on_nodes)
+        #write_data(f'ResultsCsv/{orchestrator_legend}-count-tasks-on-nodes', count_tasks_on_nodes)
 
         # power_nodes_ls = [n.measure_power() for n in infrastructure.nodes() if n.type == 'fog']
         # generate_plot_energy(node_energies, 'Node')
 
         # we can comment if running is lasting
         # generate_plot_energy(links_ls, 'Link')
-        write_to_csv(node_energies, f'{orchestrator_legend}-link-energy')
+        #write_to_csv(node_energies, f'{orchestrator_legend}-link-energy')
 
         # total link
         dynamic_power = [p.dynamic for p in links_ls]
         static_power = [p.static for p in links_ls]
         sum_link = sum(dynamic_power) + sum(static_power)
-        write_total_power(links_ls, f'{orchestrator_legend}-link-energy-node', devices_len)
+        #write_total_power(links_ls, f'{orchestrator_legend}-link-energy-node', devices_len)
 
         # write results total energy
         #old one just write node energies without sum_ram and sum_link
@@ -152,7 +152,7 @@ class comparing_orchestrator(Orchestrator):
         # old one just write node energies without sum_ram and sum_link
         #write_total_power(node_energies, f'{orchestrator_legend}-application-energy', len(self.applications))
 
-        write_total(total_power+sum_ram + sum_link, f'{orchestrator_legend}-application-energy', len(self.applications))
+        #write_total(total_power+sum_ram + sum_link, f'{orchestrator_legend}-application-energy', len(self.applications))
 
 
         # self._calculate_sum_static_dynamic(node_energies)
@@ -167,16 +167,16 @@ class comparing_orchestrator(Orchestrator):
 
         #write_data(f'ResultsCsv/{orchestrator_legend}-link-energy-total', [len(self.applications), sum_link])
 
-        write_total_power(links_ls, f'{orchestrator_legend}-link-energy-application', len(self.applications))
+        #write_total_power(links_ls, f'{orchestrator_legend}-link-energy-application', len(self.applications))
 
         #write_total_power(sum_ram, f'{orchestrator_legend}-ram-energy', len(self.applications))
-        write_data(f'ResultsCsv/{orchestrator_legend}-ram-energy-application-total', [len(self.applications), sum_ram])
+        #write_data(f'ResultsCsv/{orchestrator_legend}-ram-energy-application-total', [len(self.applications), sum_ram])
 
         #write_total_power(sum_time, f'{orchestrator_legend}-execution-time', len(self.applications))
-        write_data(f'ResultsCsv/{orchestrator_legend}-execution-time-total', [len(self.applications), sum_time])
+        #write_data(f'ResultsCsv/{orchestrator_legend}-execution-time-total', [len(self.applications), sum_time])
 
         #write best iteration
-        write_data(f'ResultsCsv/{orchestrator_legend}-best-iteration', [len(self.applications), self.scheduler.best_min_iteration_number])
+        #write_data(f'ResultsCsv/{orchestrator_legend}-best-iteration', [len(self.applications), self.scheduler.best_min_iteration_number])
 
         #write iteration and fitness and scheduling
         #write_scheduling_data(f'ResultsCsv/{orchestrator_legend}-scheduling-map', self.scheduler.scheduling_dict)

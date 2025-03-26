@@ -29,7 +29,7 @@ class PSOOrchestrator(comparing_orchestrator):
 
 
         if carbon==True:
-            self.legend = 'Carbon-PSO'
+            self.legend = 'Carbon-B-PSO'
         else:
             self.legend = 'B-PSO'
 

@@ -236,6 +236,9 @@ def show_application_info():
 def main():
     generate_new_dataset=False
 
+    carbon_aware = False
+
+
     if generate_new_dataset:
         ########################## NEW @@@@@@@@@@@@@@@
         sensor_nodes = create_sensors()
@@ -296,7 +299,7 @@ def main():
 
     orchestrator_list = []
 
-    carbon_aware = True
+
 
     orchestrator_list.append(
         PSOOrchestrator(infrastructure, applications, devices, tasks, carbon_aware, alpha=.34, beta=.33, gamma=.33,
@@ -312,7 +315,7 @@ def main():
 
     #bounds = [(-100, 100)] * 10  # 10-dimensional problem
     orchestrator_list.append(
-        SquirrelOrchestrator(infrastructure, applications, devices, tasks,[(0,len(devices) - 1)] * len(tasks),30,50,0.9,0.1,0.1))
+        SquirrelOrchestrator(infrastructure, applications, devices, tasks,[(0,len(devices) - 1)] * len(tasks),30,50,0.9,0.1,0.1,carbon=carbon_aware))
 
     # Create name for files
     orchestrator_class_name_ls = []
@@ -351,96 +354,9 @@ def main():
         total_node_time_file_names, orchestrator_class_name_ls, 'Number of Nodes', 'Time(S)',
         'Makespan')
 
-    # # read file names automatically based on the name of the class (Ram)
-    # total_ram_energy_node_file_names = []
-    # for orchestrator_name in orchestrator_class_name_ls:
-    #     total_ram_energy_node_file_names.append(f'ResultsCsv/{orchestrator_name}-ram-energy-node-total')
-    #
-    # plot_generator.plot_total(
-    #     total_ram_energy_node_file_names, orchestrator_class_name_ls, 'Number of Nodes', 'Total Ram',
-    #     'Total Ram Comparison')
-    #
-    # # read file names automatically based on the name of the class (Link)
-    # total_link_energy_node_file_names = []
-    # for orchestrator_name in orchestrator_class_name_ls:
-    #     total_link_energy_node_file_names.append(f'ResultsCsv/{orchestrator_name}-link-energy-node-total')
-    #
-    # plot_generator.plot_total(
-    #     total_link_energy_node_file_names, orchestrator_class_name_ls, 'Number of Nodes', 'Total link',
-    #     'Total link Comparison')
-
-    #################### per application ####################
-
-    # read file names automatically based on the name of the class (Energy of Applications)
-    total_application_energy_file_names = []
-    for orchestrator_name in orchestrator_class_name_ls:
-        total_application_energy_file_names.append(f'ResultsCsv/{orchestrator_name}-application-energy-total')
-
-    plot_generator.plot_total(
-        total_application_energy_file_names, orchestrator_class_name_ls, 'Number of Tasks', 'Energy(w)',
-        'Total energy consumption')
-
-    # read file names automatically based on the name of the class (Link energy of Applications)
-    total_link_energy_application_file_names = []
-    for orchestrator_name in orchestrator_class_name_ls:
-        total_link_energy_application_file_names.append(f'ResultsCsv/{orchestrator_name}-link-energy-application-total')
-
-    # plot_generator.plot_total(
-    #     total_link_energy_application_file_names, orchestrator_class_name_ls, 'Number of Applications', 'Energy(w)',
-    #     'Link energy consumptions based on number of applications')
-
-    # read file names automatically based on the name of the class (Ram energy of Applications)
-    total_ram_energy_application_file_names = []
-    for orchestrator_name in orchestrator_class_name_ls:
-        total_ram_energy_application_file_names.append(f'ResultsCsv/{orchestrator_name}-ram-energy-application-total')
-
-    # plot_generator.plot_total(
-    #     total_ram_energy_application_file_names, orchestrator_class_name_ls, 'Number of Applications', 'Energy(w)',
-    #     'Ram energy consumptions based on number of applications')
-
-    # read file names automatically based on the name of the class (Ram energy of Applications)
-    total_time_application_file_names = []
-    for orchestrator_name in orchestrator_class_name_ls:
-        total_time_application_file_names.append(f'ResultsCsv/{orchestrator_name}-execution-time-total')
-
-    plot_generator.plot_total(
-        total_time_application_file_names, orchestrator_class_name_ls, 'Number of Tasks', 'Time(s)',
-        ' Makespan')
-
-    count_tasks_on_nodes_file_names = []
-    for orchestrator_name in orchestrator_class_name_ls:
-        count_tasks_on_nodes_file_names.append(f'ResultsCsv/{orchestrator_name}-count-tasks-on-nodes')
-
-    arrays = []
-    for file in count_tasks_on_nodes_file_names:
-        temp_arr = util.read_data(file)
-        arrays.append([int(i) for i in temp_arr[0]])
-
-    plot_generator.plot_task_distribution(arrays[0], arrays[1], arrays[2], arrays[3])
-
-    min_iter_file_names = []
-    for orchestrator_name in orchestrator_class_name_ls:
-        min_iter_file_names.append(f'ResultsCsv/{orchestrator_name}-best-iteration')
-
-    task_lists = []
-    iteration_lists = []
-    for file in min_iter_file_names:
-        temp_arr = util.read_data(file)
-        task_lists.append([int(i) for i in np.array(temp_arr)[:, 0]])
-        iteration_lists.append([int(i) for i in np.array(temp_arr)[:, 1]])
-
-    labels = [i.legend for i in orchestrator_list]
-    colors = ['tab:blue', 'tab:orange', 'tab:green', 'tab:red']
-    plot_generator.plot_task_min_iterations(task_lists, iteration_lists, labels, colors)
-
-    # x= infrastructure.nodes(PowerModelNode._)
-    # y=[infrastructure.node("fog1")]
 
     application_pm = PowerMeter(applications, name="application_meter")
-    # cloud_and_fog_pm = PowerMeter([infrastructure.node("cloud"), infrastructure.node("fog")], name="cloud_and_fog_meter")
 
-    # cloud_and_fog_pm = PowerMeter([infrastructure.nodes("cloud"), infrastructure.nodes("fog")],
-    #                             name="cloud_and_fog_meter")
 
     # TODO: fog_ names shoud be dynamically read from infrastructore nodes with the type of fog.
     # TODO: Rememeber filter node types with fog, it returns sensor and fogs together
@@ -453,13 +369,7 @@ def main():
         powermeter_arr.append(infrastructure.node(node_name))
     cloud_and_fog_pm = PowerMeter(powermeter_arr)
 
-    # [n.measure_power() for n in infrastructure.nodes() if n.type=='fog' ]
-    # cloud_and_fog_pm = PowerMeter(
-    #     [infrastructure.node("cloud"), infrastructure.node("fog_0"), infrastructure.node("fog_1")
-    #         , infrastructure.node("fog_2"), infrastructure.node("fog_3"), infrastructure.node("fog_4"),
-    #      infrastructure.node("fog_5"), infrastructure.node("fog_6"), infrastructure.node("fog_7"),
-    #      infrastructure.node("fog_8"), infrastructure.node("fog_9")],
-    #     name="cloud_and_fog_meter")
+
 
     infrastructure_pm = PowerMeter(infrastructure, name="infrastructure_meter", measurement_interval=2)
 
@@ -476,8 +386,7 @@ def main():
     print("Cloud and Fog Power:", cloud_and_fog_pm.get_final_measurement())
     print("Infrastructure Power:", infrastructure_pm.get_final_measurement())
 
-    # power_nodes_ls = [n.measure_power() for n in infrastructure.nodes() if n.type == 'fog']
-    # generate_plot_energy(power_nodes_ls, 'Node')
+
 
     # TODO: should be caculated in placement after node_energies
     # links_ls = [n.measure_power() for n in infrastructure.links()]
