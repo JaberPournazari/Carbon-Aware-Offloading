@@ -234,9 +234,9 @@ def show_application_info():
 
 
 def main():
-    generate_new_dataset=False
+    generate_new_dataset=True
 
-    carbon_aware = False
+    carbon_aware = True
 
 
     if generate_new_dataset:
@@ -300,20 +300,20 @@ def main():
     orchestrator_list = []
 
 
-
     orchestrator_list.append(
         PSOOrchestrator(infrastructure, applications, devices, tasks, carbon_aware, alpha=.34, beta=.33, gamma=.33,
                         delta=0, max_iter=50))
-
+    
     orchestrator_list.append(
         CsaOrchestrator(infrastructure, applications, devices, tasks,carbon_aware, alpha=.34, beta=.33, gamma=.33,
                         delta=0, max_iter=50))
 
     orchestrator_list.append(
-        GWOOrchestrator(infrastructure, applications, devices, tasks,carbon_aware, lb=0, ub=len(devices) - 1, dim=len(tasks),
-                        SearchAgents_no=5, Max_iter=50))
+        GWOOrchestrator(infrastructure, applications, devices, tasks, carbon_aware, lb=0, ub=len(devices) - 1,
+                        dim=len(tasks),
+                        SearchAgents_no=30, Max_iter=50))
 
-    #bounds = [(-100, 100)] * 10  # 10-dimensional problem
+    bounds = [(-100, 100)] * 10  # 10-dimensional problem
     orchestrator_list.append(
         SquirrelOrchestrator(infrastructure, applications, devices, tasks,[(0,len(devices) - 1)] * len(tasks),30,50,0.9,0.1,0.1,carbon=carbon_aware))
 
@@ -326,7 +326,7 @@ def main():
     #################### emissions plot ####################
     total_node_energy_file_names = []
     for orchestrator_name in orchestrator_class_name_ls:
-        total_node_energy_file_names.append(f'ResultsCsv/{orchestrator_name}-node-emissions-total')
+        total_node_energy_file_names.append(f'ResultsCsv/emissions/{orchestrator_name}-node-emissions-total')
     #
     # we all algorithms are running plot can be done # ,'Total Energy Comparison'
     plot_generator.plot_total(
@@ -338,7 +338,7 @@ def main():
     # read file names automatically based on the name of the class (Energy)
     total_node_energy_file_names = []
     for orchestrator_name in orchestrator_class_name_ls:
-        total_node_energy_file_names.append(f'ResultsCsv/{orchestrator_name}-node-energy-total')
+        total_node_energy_file_names.append(f'ResultsCsv/energy/{orchestrator_name}-node-energy-total')
     #
     # we all algorithms are running plot can be done # ,'Total Energy Comparison'
     plot_generator.plot_total(
@@ -348,7 +348,7 @@ def main():
     # read file names automatically based on the name of the class (Time)
     total_node_time_file_names = []
     for orchestrator_name in orchestrator_class_name_ls:
-        total_node_time_file_names.append(f'ResultsCsv/{orchestrator_name}-node-time-total')
+        total_node_time_file_names.append(f'ResultsCsv/makespan/{orchestrator_name}-node-time-total')
 
     plot_generator.plot_total(
         total_node_time_file_names, orchestrator_class_name_ls, 'Number of Nodes', 'Time(S)',

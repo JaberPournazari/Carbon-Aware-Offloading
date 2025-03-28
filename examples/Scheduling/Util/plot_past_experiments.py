@@ -2,7 +2,16 @@ from examples.Scheduling.Util import plot_generator
 from examples.Scheduling.Util.plot_generator import *
 
 
-plot_carbon_and_simple()
+middle='result 600 tasks 350 nodes/'
+
+plot_carbon_and_simple(f'C:/Carbon-Aware-Offloading/examples/Scheduling/resultscsv/{middle}emissions','Algorithm'
+                       ,'CO2 Emission Rate','CO2 Emissions Rate ')
+
+plot_carbon_and_simple(f'C:/Carbon-Aware-Offloading/examples/Scheduling/resultscsv/{middle}energy','Algorithm'
+                       ,'Total Energy(W)','Energy')
+
+plot_carbon_and_simple(f'C:/Carbon-Aware-Offloading/examples/Scheduling/resultscsv/{middle}makespan','Algorithm'
+                       ,'Makespan(S)','Makespan')
 
 
 #

@@ -305,7 +305,7 @@ def plot_task_min_iterations(task_lists, iteration_lists, labels, colors, width=
     plt.show()
 
 
-def plot_carbon_and_simple():
+def plot_carbon_and_simple(data_dir,xlabel,ylabel,plot_title):
     import matplotlib.pyplot as plt
     import os
     import re
@@ -314,13 +314,14 @@ def plot_carbon_and_simple():
     import numpy as np
 
     # Directory containing your CSV files
-    data_dir = 'C:/Carbon-Aware-Offloading/examples/Scheduling/resultscsv/Emissions'  # Or use a raw string: r'C:\...'
+    #data_dir = 'C:/Carbon-Aware-Offloading/examples/Scheduling/resultscsv/Emissions'  # Or use a raw string: r'C:\...'
 
     # Dictionary to store data for plotting
     plot_data = defaultdict(lambda: defaultdict(lambda: defaultdict(float)))
 
     # Regular expression to extract algorithm names (handling the 'carbon-' prefix)
-    algorithm_regex = re.compile(r'(carbon-)?(.*)-node-emissions-total\.csv')
+    #algorithm_regex = re.compile(r'(carbon-)?(.*)-node-emissions-total\.csv')
+    algorithm_regex = re.compile(r'(carbon-)?(.*)-total\.csv')
 
     # Collect data from CSV files
     for filename in os.listdir(data_dir):
@@ -389,16 +390,18 @@ def plot_carbon_and_simple():
     # Set x-axis labels and ticks
     ax.set_xticks([i * group_width for i in range(num_algorithms)])
     ax.set_xticklabels(algorithm_base_names, rotation=45, ha='right')
-    ax.set_xlabel("Algorithm")
+    ax.set_xlabel(xlabel)
 
     # Set y-axis label
-    ax.set_ylabel("CO2 Emission Rate")
+    ax.set_ylabel(ylabel)
 
     # Set the title of the plot
-    ax.set_title("CO2 Emission Comparison of Algorithms")
+    ax.set_title(plot_title)
 
     # Add a legend
     ax.legend()
+
+    plt.grid(True)
 
     # Adjust layout to prevent labels from overlapping
     plt.tight_layout()

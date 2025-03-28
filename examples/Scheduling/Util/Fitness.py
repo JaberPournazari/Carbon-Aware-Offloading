@@ -22,7 +22,7 @@ def fitness(positions, carbon, tasks, devices,applications,infrastructure):
         final_schedule_carbon_used = calculate_schedule_carbon(positions, devices, tasks)
 
     for pos in positions:
-        print('pos ' + str(pos))
+        #print('pos ' + str(pos))
         tasks[i].allocate(devices[pos])
 
         # self.tasks[i].node.power_model().power_per_cu=self.tasks[i].cu

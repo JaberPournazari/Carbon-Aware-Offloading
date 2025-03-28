@@ -89,7 +89,7 @@ class comparing_orchestrator(Orchestrator):
         sum_time = sum(node_times)
         sum_ram = sum_time * MICROPROCESSORS_POWER_RAM
 
-        write_total(sum_time, f'{orchestrator_legend}-node-time', devices_len)
+        write_total(sum_time, f'/makespan/{orchestrator_legend}-node-time', devices_len)
         #write_total(sum_ram, f'{orchestrator_legend}-ram-energy-node', devices_len)
 
         node_energies = []
@@ -108,7 +108,7 @@ class comparing_orchestrator(Orchestrator):
 
         # each kilo watt has 0.5kg CO2
         sum_emission = sum_emission * 0.5 / 1000
-        write_total(sum_emission, f'{orchestrator_legend}-node-emissions', devices_len)
+        write_total(sum_emission, f'/emissions/{orchestrator_legend}-node-emissions', devices_len)
 
         # write results in separate files with static and dynamic values
         #write_to_csv(node_energies, f'{orchestrator_legend}-node-energy')
@@ -143,7 +143,7 @@ class comparing_orchestrator(Orchestrator):
         dynamic_power = [p.dynamic for p in node_energies]
         static_power = [p.static for p in node_energies]
         total_power = sum(dynamic_power) + sum(static_power)
-        write_total(total_power+sum_ram + sum_link ,f'{orchestrator_legend}-node-energy', devices_len)
+        write_total(total_power+sum_ram + sum_link ,f'/energy/{orchestrator_legend}-node-energy', devices_len)
 
 
 

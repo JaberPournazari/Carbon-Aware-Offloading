@@ -38,6 +38,8 @@ class TaskDeviceScheduler:
         self.best_min_iteration_number = Max_iter
         self.scheduling_dict={}
         self.carbon=carbon
+        self.num_tasks=len(tasks)
+        self.num_devices = len(devices)
 
     def optimize(self):
         Max_iter=self.Max_iter
@@ -65,7 +67,10 @@ class TaskDeviceScheduler:
         Positions = numpy.zeros((SearchAgents_no, dim))
         for i in range(dim):
             Positions[:, i] = (
-                numpy.random.uniform(0, 1, SearchAgents_no) * (ub[i] - lb[i]) + lb[i]
+                #numpy.random.uniform(0, 1, SearchAgents_no) * (ub[i] - lb[i]) + lb[i]
+                
+                #This is pso that I choosed for random selection
+                numpy.random.randint(0, self.num_devices, size=self.SearchAgents_no)
             )
 
         Positions=Positions.astype(int)
@@ -85,6 +90,8 @@ class TaskDeviceScheduler:
                 # Calculate objective function for each search agent
                 #fitness = self.fitness(Positions[i, :])
                 fitness = ft.fitness(Positions[i, :], self.carbon, self.tasks,self.devices,self.applications,self.infrastructure)
+                
+                print(Positions[i, :])
 
 
                 # Update Alpha, Beta, and Delta
