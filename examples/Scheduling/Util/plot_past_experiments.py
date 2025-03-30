@@ -2,7 +2,8 @@ from examples.Scheduling.Util import plot_generator
 from examples.Scheduling.Util.plot_generator import *
 
 
-middle='result 600 tasks 350 nodes/'
+#middle='result 600 tasks 350 nodes/'
+middle=''
 
 plot_carbon_and_simple(f'C:/Carbon-Aware-Offloading/examples/Scheduling/resultscsv/{middle}emissions','Algorithm'
                        ,'CO2 Emission Rate','CO2 Emissions Rate ')

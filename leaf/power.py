@@ -147,7 +147,7 @@ class PowerModelNodeCarbon(PowerModelNode):
 
     def measure(self) -> PowerMeasurement:
         if self.power_per_cu is not None:
-            dynamic_power = self.power_per_cu * self.node.used_cu
+            dynamic_power = self.power_per_cu * (self.node.used_cu - self.node.used_battery)
         elif self.max_power is not None:
             # print('max_power:', self.max_power)
             # print('static_power:', self.static_power)
@@ -158,7 +158,10 @@ class PowerModelNodeCarbon(PowerModelNode):
             raise RuntimeError("Invalid state of PowerModelNode: `max_power` and `power_per_cu` are undefined.")
 
         # Finally dynamic_power is reduced based on carbon_percent, because carbon free powers do not use energy
-        dynamic_power = dynamic_power - (dynamic_power * self.carbon_free_percent)
+        #dynamic_power = dynamic_power - (dynamic_power * self.carbon_free_percent)
+
+        dynamic_power = round(dynamic_power, 3)
+
         pw = PowerMeasurement(dynamic=dynamic_power, static=self.static_power)
         return pw
 
@@ -175,6 +178,7 @@ class PowerModelLink(PowerModel):
 
     def measure(self) -> PowerMeasurement:
         dynamic_power = self.energy_per_bit * self.link.used_bandwidth
+        dynamic_power = round(dynamic_power, 3)
         return PowerMeasurement(dynamic=dynamic_power, static=0)
 
     def set_parent(self, parent):

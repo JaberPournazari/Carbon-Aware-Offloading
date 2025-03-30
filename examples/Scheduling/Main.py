@@ -1,7 +1,9 @@
 import logging
+import multiprocessing
 import random, sys
 import simpy
 import numpy as np
+import time
 
 
 
@@ -117,9 +119,9 @@ def create_fogs(counts,nodes_data=None,nodes_statics_data=None):
             cu = round(cu)
 
             # we use percent of nodes as carbon free
-            if index < counts * 0.5:
+            if index < counts * 1:
                 fog_node = NodeCarbon(type="carbonfree", name=f"fog_{index}", cu=cu,
-                                      power_model=PowerModelNodeCarbon(.25, power_per_cu=MICROPROCESSORS_POWER_PER_CU,
+                                      power_model=PowerModelNodeCarbon(.75, power_per_cu=MICROPROCESSORS_POWER_PER_CU,
                                                                        static_power=static_power),
                                       initial_power=MICROPROCESSORS_INITIAL_POWER_MEAN,
                                       remaining_power=MICROPROCESSORS_REMAINING_POWER_MEAN,
@@ -233,10 +235,14 @@ def show_application_info():
                     print(link)
 
 
-def main():
-    generate_new_dataset=True
+def process_orchestrator_mp(orchestrator, application, results_queue):
+    orchestrator.place(application)
+    results_queue.put(orchestrator.legend)
 
-    carbon_aware = True
+def main():
+    generate_new_dataset= False
+
+    carbon_aware = False
 
 
     if generate_new_dataset:
@@ -302,26 +308,58 @@ def main():
 
     orchestrator_list.append(
         PSOOrchestrator(infrastructure, applications, devices, tasks, carbon_aware, alpha=.34, beta=.33, gamma=.33,
-                        delta=0, max_iter=50))
-    
+                        delta=0, max_iter=200))
+
     orchestrator_list.append(
         CsaOrchestrator(infrastructure, applications, devices, tasks,carbon_aware, alpha=.34, beta=.33, gamma=.33,
-                        delta=0, max_iter=50))
+                        delta=0, max_iter=200))
 
     orchestrator_list.append(
         GWOOrchestrator(infrastructure, applications, devices, tasks, carbon_aware, lb=0, ub=len(devices) - 1,
                         dim=len(tasks),
-                        SearchAgents_no=30, Max_iter=50))
+                        SearchAgents_no=30, Max_iter=200))
 
     bounds = [(-100, 100)] * 10  # 10-dimensional problem
     orchestrator_list.append(
-        SquirrelOrchestrator(infrastructure, applications, devices, tasks,[(0,len(devices) - 1)] * len(tasks),30,50,0.9,0.1,0.1,carbon=carbon_aware))
+        SquirrelOrchestrator(infrastructure, applications, devices, tasks,[(0,len(devices) - 1)] * len(tasks),30,200,0.9,0.1,0.1,carbon=carbon_aware))
 
+
+    #single thread
     # Create name for files
+    # orchestrator_class_name_ls = []
+    # start_time_sequential = time.perf_counter()
+    # for orchestrator in orchestrator_list:
+    #     orchestrator.place(applications[0])
+    #     orchestrator_class_name_ls.append(orchestrator.legend)
+    #
+    # end_time_sequential = time.perf_counter()
+    # elapsed_time_sequential = end_time_sequential - start_time_sequential
+    # print(f"Sequential Execution Time: {elapsed_time_sequential:.4f} seconds")
+
+    #Multi thread
     orchestrator_class_name_ls = []
+    processes = []
+    results_queue = multiprocessing.Queue()
+
+    start_time_multiprocessing = time.perf_counter()
     for orchestrator in orchestrator_list:
-        orchestrator.place(applications[0])
-        orchestrator_class_name_ls.append(orchestrator.legend)
+        process = multiprocessing.Process(target=process_orchestrator_mp,
+                                          args=(orchestrator, applications[0], results_queue))
+        processes.append(process)
+        process.start()
+
+    # Wait for all processes to complete
+    for process in processes:
+        process.join()
+
+    end_time_multiprocessing = time.perf_counter()
+    elapsed_time_multiprocessing = end_time_multiprocessing - start_time_multiprocessing
+
+    print(f"Multiprocessing Execution Time: {elapsed_time_multiprocessing:.4f} seconds")
+
+    # Retrieve results from the queue
+    while not results_queue.empty():
+        orchestrator_class_name_ls.append(results_queue.get())
 
     #################### emissions plot ####################
     total_node_energy_file_names = []
