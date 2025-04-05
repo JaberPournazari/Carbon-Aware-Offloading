@@ -1,6 +1,6 @@
 import networkx as nx
 
-from examples.Scheduling.setting import MICROPROCESSORS_POWER_RAM
+from examples.Scheduling.setting import MICROPROCESSORS_POWER_RAM, MICROPROCESSORS_BATTERY_POWER
 from examples.Scheduling.Util.util import *
 from examples.Scheduling.Util.plot_generator import *
 from leaf.application import Application, SourceTask
@@ -19,6 +19,11 @@ class comparing_orchestrator(Orchestrator):
         orchestrator_legend = self.legend
         self.scheduler.optimize()
 
+        # Recharge batteries after optimizing for calculating again
+        for dv in self.devices:
+            dv.free_battery = MICROPROCESSORS_BATTERY_POWER
+
+
         print(f'starting placement {orchestrator_legend}')
         print('result', self.scheduler.get_best_assignment())
         # [0] index array for min position
@@ -31,7 +36,7 @@ class comparing_orchestrator(Orchestrator):
         sum_emission=0
         i = 0
 
-        final_schedule_carbon_used = calculate_schedule_carbon(positions, self.devices, self.tasks)
+        #final_schedule_carbon_used = calculate_schedule_carbon(positions, self.devices, self.tasks)
 
 
         for pos in positions:
@@ -47,8 +52,10 @@ class comparing_orchestrator(Orchestrator):
             positions_ls.append((pos, energy))
 
 
-            if final_schedule_carbon_used[i] == 0:
-                sum_emission = sum_emission + energy.dynamic
+            #if final_schedule_carbon_used[i] == 0:
+            emis_calc = self.devices[pos]._get_free_battery() - energy.dynamic
+            if emis_calc < 0:
+                sum_emission = abs(emis_calc)
 
             # placing applications
             app = self.applications[i]
@@ -106,8 +113,8 @@ class comparing_orchestrator(Orchestrator):
             # if node iterated 3 times , just  static power sum 1 times
             node_energies.append(PowerMeasurement(sum_dynamic, selected[0][1].static))
 
-        # each kilo watt has 0.5kg CO2
-        sum_emission = sum_emission * 0.5 / 1000
+        # Each kilowatt.hour(Joule) has 0.842kg CO2
+        sum_emission = sum_emission * 0.842 / 1000
         write_total(sum_emission, f'/emissions/{orchestrator_legend}-node-emissions', devices_len)
 
         # write results in separate files with static and dynamic values
@@ -188,6 +195,10 @@ class comparing_orchestrator(Orchestrator):
 
         for tsk in self.tasks:
             tsk.deallocate()
+
+        # Recharge batteries after placing to have newer energy for next algorithms
+        for dv in self.devices:
+            dv.battery_power = MICROPROCESSORS_BATTERY_POWER
 
 
     def _calculate_sum_static_dynamic(self, energy):

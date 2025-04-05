@@ -18,17 +18,22 @@ def fitness(positions, carbon, tasks, devices,applications,infrastructure):
     sum_emission = 0
     node_times = [0 for pos in set(devices)]
 
+    # Recharge batteries after optimizing for calculating again
+    for dv in devices:
+        dv.free_battery = MICROPROCESSORS_BATTERY_POWER
+
     #calculating variance of random position that algorithm provided
     #variance= np.var(positions)
 
-    if carbon:
-        final_schedule_carbon_used = calculate_schedule_carbon(positions, devices, tasks)
+    # if carbon:
+    #     final_schedule_carbon_used = calculate_schedule_carbon(positions, devices, tasks)
 
     for pos in positions:
-        #print('pos ' + str(pos))
+        #print('Node free battery before: ',  devices[pos]._get_free_battery())
+
         tasks[i].allocate(devices[pos])
 
-        # self.tasks[i].node.power_model().power_per_cu=self.tasks[i].cu
+        #print('Node free battery after: ', devices[pos]._get_free_battery())
 
         # calculating node consumed time
         node_times[pos] = round(node_times[pos] + tasks[i].cu / devices[pos].cu, 4)
@@ -36,13 +41,16 @@ def fitness(positions, carbon, tasks, devices,applications,infrastructure):
         tmp = devices[pos].measure_power()
         sum_node = round(sum_node + tmp.dynamic)
 
+        #   carbon = 700 - dynami power + static power + link power  = X --> -X * CO2Gram
         if pos in positions_set:
             sum_node = round(sum_node + tmp.static, 4)
             positions_set.remove(pos)
 
         if carbon:
-            if final_schedule_carbon_used[i] == 0:
-                sum_emission = sum_emission + tmp.dynamic
+            #if final_schedule_carbon_used[i] == 0:
+            emis_calc = devices[pos]._get_free_battery() - tmp.dynamic
+            if emis_calc < 0 :
+                sum_emission= abs(emis_calc)
 
         # calculating energy of links. here we do not consider energy linkes.
         # we will do it later
@@ -75,14 +83,16 @@ def fitness(positions, carbon, tasks, devices,applications,infrastructure):
         i = i + 1
 
     if carbon:
-        # each kilo watt has 0.5kg CO2
-        sum_emission = round(sum_emission * 0.5 / 1000 , 4)
+        # Each kilowatt.hour(Joule) has 0.842kg CO2
+        #sum_emission = round(sum_emission * 0.842 / 1000 , 4)
+        sum_emission = sum_emission
 
     sum_time = sum(node_times)
     sum_ram = sum_time * MICROPROCESSORS_POWER_RAM
 
     if carbon:
-        sum_total = 0.23*sum_node + 0.01*sum_ram + 0.01*sum_link + 0.75*sum_emission
+        #sum_total = 0.04*sum_node + 0.01*sum_ram + 0.01*sum_link + 0.94*sum_emission
+        sum_total = sum_emission
     else:
         sum_total = 0.96*sum_node + 0.02*sum_ram + 0.02*sum_link
 
@@ -96,6 +106,7 @@ def fitness(positions, carbon, tasks, devices,applications,infrastructure):
 
     for tsk in tasks:
         tsk.deallocate()
+
 
     # TODO: Do not final sum for fitness
     return sum_total

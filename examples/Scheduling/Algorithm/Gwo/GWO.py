@@ -91,8 +91,9 @@ class TaskDeviceScheduler:
                 #fitness = self.fitness(Positions[i, :])
                 fitness = ft.fitness(Positions[i, :], self.carbon, self.tasks,self.devices,self.applications,self.infrastructure)
                 
-                print(Positions[i, :])
+                #print(Positions[i, :])
 
+                print('fitness = ' + str(fitness))
 
                 # Update Alpha, Beta, and Delta
                 if fitness < Alpha_score:

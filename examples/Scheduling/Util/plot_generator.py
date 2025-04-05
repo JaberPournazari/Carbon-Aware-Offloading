@@ -361,6 +361,7 @@ def plot_carbon_and_simple(data_dir,xlabel,ylabel,plot_title):
     # Set the width of the bars
     bar_width = 0.35
 
+
     # Create the plot
     fig, ax = plt.subplots(figsize=(16, 8))
 

@@ -240,9 +240,9 @@ def process_orchestrator_mp(orchestrator, application, results_queue):
     results_queue.put(orchestrator.legend)
 
 def main():
-    generate_new_dataset= False
 
-    carbon_aware = False
+    generate_new_dataset= True
+    carbon_aware = True
 
 
     if generate_new_dataset:
@@ -306,60 +306,65 @@ def main():
     orchestrator_list = []
 
 
+    iterations=100
+
+
+
     orchestrator_list.append(
         PSOOrchestrator(infrastructure, applications, devices, tasks, carbon_aware, alpha=.34, beta=.33, gamma=.33,
-                        delta=0, max_iter=200))
+                        delta=0, max_iter=iterations,w=0.9,c1=1.9,c2=0))
+
 
     orchestrator_list.append(
         CsaOrchestrator(infrastructure, applications, devices, tasks,carbon_aware, alpha=.34, beta=.33, gamma=.33,
-                        delta=0, max_iter=200))
+                        delta=0, max_iter=iterations))
 
     orchestrator_list.append(
         GWOOrchestrator(infrastructure, applications, devices, tasks, carbon_aware, lb=0, ub=len(devices) - 1,
                         dim=len(tasks),
-                        SearchAgents_no=30, Max_iter=200))
+                        SearchAgents_no=5, Max_iter=iterations))
 
     bounds = [(-100, 100)] * 10  # 10-dimensional problem
     orchestrator_list.append(
-        SquirrelOrchestrator(infrastructure, applications, devices, tasks,[(0,len(devices) - 1)] * len(tasks),30,200,0.9,0.1,0.1,carbon=carbon_aware))
+        SquirrelOrchestrator(infrastructure, applications, devices, tasks,[(0,len(devices) - 1)] * len(tasks),30,iterations,0.9,0.1,0.1,carbon=carbon_aware))
 
 
     #single thread
-    # Create name for files
-    # orchestrator_class_name_ls = []
-    # start_time_sequential = time.perf_counter()
-    # for orchestrator in orchestrator_list:
-    #     orchestrator.place(applications[0])
-    #     orchestrator_class_name_ls.append(orchestrator.legend)
-    #
-    # end_time_sequential = time.perf_counter()
-    # elapsed_time_sequential = end_time_sequential - start_time_sequential
-    # print(f"Sequential Execution Time: {elapsed_time_sequential:.4f} seconds")
+    #Create name for files
+    orchestrator_class_name_ls = []
+    start_time_sequential = time.perf_counter()
+    for orchestrator in orchestrator_list:
+        orchestrator.place(applications[0])
+        orchestrator_class_name_ls.append(orchestrator.legend)
+
+    end_time_sequential = time.perf_counter()
+    elapsed_time_sequential = end_time_sequential - start_time_sequential
+    print(f"Sequential Execution Time: {elapsed_time_sequential:.4f} seconds")
 
     #Multi thread
-    orchestrator_class_name_ls = []
-    processes = []
-    results_queue = multiprocessing.Queue()
-
-    start_time_multiprocessing = time.perf_counter()
-    for orchestrator in orchestrator_list:
-        process = multiprocessing.Process(target=process_orchestrator_mp,
-                                          args=(orchestrator, applications[0], results_queue))
-        processes.append(process)
-        process.start()
-
-    # Wait for all processes to complete
-    for process in processes:
-        process.join()
-
-    end_time_multiprocessing = time.perf_counter()
-    elapsed_time_multiprocessing = end_time_multiprocessing - start_time_multiprocessing
-
-    print(f"Multiprocessing Execution Time: {elapsed_time_multiprocessing:.4f} seconds")
-
-    # Retrieve results from the queue
-    while not results_queue.empty():
-        orchestrator_class_name_ls.append(results_queue.get())
+    # orchestrator_class_name_ls = []
+    # processes = []
+    # results_queue = multiprocessing.Queue()
+    #
+    # start_time_multiprocessing = time.perf_counter()
+    # for orchestrator in orchestrator_list:
+    #     process = multiprocessing.Process(target=process_orchestrator_mp,
+    #                                       args=(orchestrator, applications[0], results_queue))
+    #     processes.append(process)
+    #     process.start()
+    #
+    # # Wait for all processes to complete
+    # for process in processes:
+    #     process.join()
+    #
+    # end_time_multiprocessing = time.perf_counter()
+    # elapsed_time_multiprocessing = end_time_multiprocessing - start_time_multiprocessing
+    #
+    # print(f"Multiprocessing Execution Time: {elapsed_time_multiprocessing:.4f} seconds")
+    #
+    # # Retrieve results from the queue
+    # while not results_queue.empty():
+    #     orchestrator_class_name_ls.append(results_queue.get())
 
     #################### emissions plot ####################
     total_node_energy_file_names = []
@@ -409,20 +414,20 @@ def main():
 
 
 
-    infrastructure_pm = PowerMeter(infrastructure, name="infrastructure_meter", measurement_interval=2)
-
-    # SimPy library is process-based discrete-event simulation framework
-    env = simpy.Environment()
-    env.process(application_pm.run(env, delay=0.5))
-    env.process(cloud_and_fog_pm.run(env))
-    env.run(until=5)
-
-    # application_energy=application_pm.get_final_measurement()
-
-    print("Final Power Measurements:")
-    print("Application Power:", application_pm.get_final_measurement())
-    print("Cloud and Fog Power:", cloud_and_fog_pm.get_final_measurement())
-    print("Infrastructure Power:", infrastructure_pm.get_final_measurement())
+    # infrastructure_pm = PowerMeter(infrastructure, name="infrastructure_meter", measurement_interval=2)
+    #
+    # # SimPy library is process-based discrete-event simulation framework
+    # env = simpy.Environment()
+    # env.process(application_pm.run(env, delay=0.5))
+    # env.process(cloud_and_fog_pm.run(env))
+    # env.run(until=5)
+    #
+    # # application_energy=application_pm.get_final_measurement()
+    #
+    # print("Final Power Measurements:")
+    # print("Application Power:", application_pm.get_final_measurement())
+    # print("Cloud and Fog Power:", cloud_and_fog_pm.get_final_measurement())
+    # print("Infrastructure Power:", infrastructure_pm.get_final_measurement())
 
 
 
