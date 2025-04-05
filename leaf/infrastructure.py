@@ -198,15 +198,18 @@ class NodeCarbon(Node,PowerModelNodeCarbon):
         """Add a task to the node.
         Private as this is only called by leaf.application.Task and not part of the public interface.
         """
-        # added for calculation of CO2 and get energy resource from battery
-        if self._get_free_battery() >= task.cu:
-            self.used_battery = task.cu
-
         super()._add_task(task)
+
+        # added for calculation of CO2 and get energy resource from battery
+        power = self.measure_power()
+
+        self.used_battery = self.used_battery + power.dynamic
+
+        self.free_battery = self.free_battery - self.used_battery
 
     def _get_free_battery(self):
         #self.used_battery=
-        return self.battery_power-self.used_battery
+        return self.free_battery
 
     def _remove_task(self, task: "Task"):
         """Remove a task from the node.
@@ -214,10 +217,6 @@ class NodeCarbon(Node,PowerModelNodeCarbon):
         Private as this is only called by leaf.application.Task and not part of the public interface.
         """
         super()._remove_task(task)
-
-        #added for calculation of CO2
-        if self._get_free_battery()>0:
-            self.used_battery= self.used_battery-task.cu
 
 class Link(PowerAware):
     def __init__(self, src: Node, dst: Node, bandwidth: float, power_model: "PowerModelLink", latency: float = 0,
