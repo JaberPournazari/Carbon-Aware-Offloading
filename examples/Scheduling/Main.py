@@ -241,7 +241,7 @@ def process_orchestrator_mp(orchestrator, application, results_queue):
 
 def main():
 
-    generate_new_dataset= True
+    generate_new_dataset= False
     carbon_aware = True
 
 
@@ -306,18 +306,18 @@ def main():
     orchestrator_list = []
 
 
-    iterations=100
+    iterations=50
 
 
-
-    orchestrator_list.append(
-        PSOOrchestrator(infrastructure, applications, devices, tasks, carbon_aware, alpha=.34, beta=.33, gamma=.33,
-                        delta=0, max_iter=iterations,w=0.9,c1=1.9,c2=0))
-
-
-    orchestrator_list.append(
-        CsaOrchestrator(infrastructure, applications, devices, tasks,carbon_aware, alpha=.34, beta=.33, gamma=.33,
-                        delta=0, max_iter=iterations))
+    #
+    # orchestrator_list.append(
+    #     PSOOrchestrator(infrastructure, applications, devices, tasks, carbon_aware, alpha=.34, beta=.33, gamma=.33,
+    #                     delta=0, max_iter=iterations,w=0.9,c1=1.9,c2=0))
+    #
+    #
+    # orchestrator_list.append(
+    #     CsaOrchestrator(infrastructure, applications, devices, tasks,carbon_aware, alpha=.34, beta=.33, gamma=.33,
+    #                     delta=0, max_iter=iterations))
 
     orchestrator_list.append(
         GWOOrchestrator(infrastructure, applications, devices, tasks, carbon_aware, lb=0, ub=len(devices) - 1,

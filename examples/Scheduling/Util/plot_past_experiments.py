@@ -4,8 +4,8 @@ sys.path.append("C:\\Carbon-Aware-Offloading")
 from examples.Scheduling.Util import plot_generator
 from examples.Scheduling.Util.plot_generator import *
 
-#middle='result 200 tasks 60 nodes/'
-middle='series2/result 300 tasks 50 nodes/'
+middle='result 1000 tasks 1000 nodes/'
+#middle='series2/result 300 tasks 60 nodes/'
 #middle=''
 
 plot_carbon_and_simple(f'C:/Carbon-Aware-Offloading/examples/Scheduling/resultscsv/{middle}emissions','Algorithm'

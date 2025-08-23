@@ -85,14 +85,15 @@ def fitness(positions, carbon, tasks, devices,applications,infrastructure):
     if carbon:
         # Each kilowatt.hour(Joule) has 0.842kg CO2
         #sum_emission = round(sum_emission * 0.842 / 1000 , 4)
-        sum_emission = sum_emission
+        sum_emission = sum_emission * 0.842 / 1000
+        #sum_emission = sum_emission
 
     sum_time = sum(node_times)
     sum_ram = sum_time * MICROPROCESSORS_POWER_RAM
 
     if carbon:
         #sum_total = 0.04*sum_node + 0.01*sum_ram + 0.01*sum_link + 0.94*sum_emission
-        sum_total = sum_emission
+        sum_total = 0.5 * sum_emission
     else:
         sum_total = 0.96*sum_node + 0.02*sum_ram + 0.02*sum_link
 
